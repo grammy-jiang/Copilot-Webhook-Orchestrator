@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💡 Discuss an idea first
+    url: https://github.com/grammy-jiang/agentic-dev-template/discussions/new?category=ideas
+    about: Not sure if it's a feature request or bug? Start a discussion first.
+  - name: 📖 Read the contributing guide
+    url: https://github.com/grammy-jiang/agentic-dev-template/blob/master/CONTRIBUTING.md
+    about: Learn how to contribute to this project.

@@ -1,0 +1,166 @@
+name: "🧪 Test Case Gap"
+description: "Report missing test coverage linked to acceptance criteria."
+title: "[Test Gap]: "
+labels: ["testing", "coverage-gap", "needs-triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Test Case Gap Report
+
+        Use this template to document missing test coverage.
+        This feeds into the **test-drafter** and **test-truth-and-stability-gate** agents.
+
+        Every test gap should be linked to an acceptance criterion or risk item.
+  - type: input
+    id: related-story
+    attributes:
+      label: Related Story / Feature
+      description: Link to the user story or feature this test gap relates to.
+      placeholder: "#123 or Story Title"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criterion
+    attributes:
+      label: Acceptance Criterion (Untested)
+      description: Which acceptance criterion lacks test coverage?
+      placeholder: |
+        From Story #123:
+
+        **Scenario: User login with invalid credentials**
+        - Given a user with invalid credentials
+        - When they attempt to log in
+        - Then they should see an error message "Invalid email or password"
+        - And no session should be created
+
+        **Current state:** No automated test exists for this scenario.
+    validations:
+      required: true
+  - type: dropdown
+    id: test-layer
+    attributes:
+      label: Test Layer Needed
+      description: At which layer should this be tested?
+      options:
+        - "Unit Test - Business logic, utilities"
+        - "Integration Test - Module boundaries, database"
+        - "Contract Test - API contracts, schemas"
+        - "E2E Test - Critical user journey"
+        - "Multiple layers needed"
+    validations:
+      required: true
+  - type: dropdown
+    id: gap-reason
+    attributes:
+      label: Reason for Gap
+      description: Why does this test gap exist?
+      options:
+        - "Never written - New feature shipped without tests"
+        - "Deleted - Tests were removed (flaky, slow, etc.)"
+        - "Edge case missed - Happy path tested, edge case not"
+        - "Refactor broke - Code changed, tests not updated"
+        - "Environment issue - Test can't run in CI"
+        - "Unknown - Discovered during review/audit"
+    validations:
+      required: true
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk Level
+      description: What is the risk of this gap remaining untested?
+      options:
+        - "Critical - Security/data integrity at risk"
+        - "High - Core functionality untested"
+        - "Medium - Important edge case untested"
+        - "Low - Minor scenario, low likelihood"
+    validations:
+      required: true
+  - type: textarea
+    id: current-coverage
+    attributes:
+      label: Current Test Coverage
+      description: What related tests DO exist?
+      placeholder: |
+        **Existing tests:**
+        - ✅ `auth.test.js` - Tests happy path login
+        - ✅ `auth.test.js` - Tests logout
+        - ❌ Missing: Invalid credentials scenario
+        - ❌ Missing: Account locked scenario
+        - ❌ Missing: Rate limiting scenario
+    validations:
+      required: false
+  - type: textarea
+    id: proposed-tests
+    attributes:
+      label: Proposed Test Cases
+      description: What specific tests should be written?
+      placeholder: |
+        **Unit tests:**
+        - [ ] `validateCredentials()` returns false for invalid password
+        - [ ] `validateCredentials()` returns false for non-existent user
+
+        **Integration tests:**
+        - [ ] POST /auth/login with invalid credentials returns 401
+        - [ ] POST /auth/login with invalid credentials does not create session
+        - [ ] POST /auth/login logs failed attempt for audit
+
+        **E2E tests:**
+        - [ ] User sees error message on invalid login
+        - [ ] User can retry after failed login
+    validations:
+      required: true
+  - type: textarea
+    id: test-data
+    attributes:
+      label: Test Data Requirements
+      description: What fixtures, mocks, or test data are needed?
+      placeholder: |
+        - Need fixture: User with known valid credentials
+        - Need fixture: User with locked account
+        - Need mock: Rate limiter at threshold
+        - Need seed: Failed login attempts in audit log
+    validations:
+      required: false
+  - type: textarea
+    id: determinism-concerns
+    attributes:
+      label: Determinism Concerns
+      description: Any challenges with making this test deterministic?
+      placeholder: |
+        - Time-dependent: Login lockout uses real time
+          - Solution: Mock clock / inject time provider
+        - External dependency: Calls auth0 API
+          - Solution: Mock auth0 client
+        - Random: CAPTCHA after N failures
+          - Solution: Seed random or mock CAPTCHA service
+    validations:
+      required: false
+  - type: textarea
+    id: files-affected
+    attributes:
+      label: Files to Create/Modify
+      description: Which test files need to be created or updated?
+      placeholder: |
+        - Create: `tests/unit/auth/validateCredentials.test.js`
+        - Update: `tests/integration/auth/login.test.js`
+        - Update: `tests/e2e/auth.spec.js`
+    validations:
+      required: false
+  - type: checkboxes
+    id: gap-checklist
+    attributes:
+      label: Test Gap Checklist
+      description: Ensure the gap is properly documented.
+      options:
+        - label: Gap is linked to a specific acceptance criterion or risk
+          required: true
+        - label: Appropriate test layer is identified
+          required: true
+        - label: Risk level is assessed
+          required: true
+        - label: Proposed test cases are specific and actionable
+          required: true
+        - label: Determinism concerns are addressed (if any)
+          required: false

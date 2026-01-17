@@ -1,0 +1,179 @@
+name: "📖 User Story"
+description: "Create an INVEST-compliant user story with acceptance criteria. Designed
+  for story-builder agent output."
+title: "[Story]: "
+labels: ["story", "needs-refinement"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## User Story (INVEST Format)
+
+        This form captures a single, implementable user story following **INVEST** principles:
+        - **I**ndependent, **N**egotiable, **V**aluable, **E**stimable, **S**mall, **T**estable
+
+        Stories should be small enough to complete in one iteration (1-2 weeks).
+  - type: input
+    id: epic-reference
+    attributes:
+      label: Epic / Feature Reference
+      description: Link to the parent feature request or epic (if applicable).
+      placeholder: "#123 or Feature Name"
+    validations:
+      required: false
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story Statement
+      description: Use the standard format - As a [persona], I want [capability],
+        so that [benefit].
+      placeholder: |
+        As a [type of user],
+        I want [some goal or capability],
+        So that [some reason or benefit].
+    validations:
+      required: true
+  - type: textarea
+    id: business-value
+    attributes:
+      label: Business Value
+      description: Why does this story matter? What value does it deliver?
+      placeholder: |
+        - User benefit: ...
+        - Business benefit: ...
+        - Success metric: ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria-happy
+    attributes:
+      label: "Acceptance Criteria: Happy Path"
+      description: Given/When/Then format for the expected behavior.
+      placeholder: |
+        **Scenario 1: [Name]**
+        - Given [initial context]
+        - When [action is performed]
+        - Then [expected outcome]
+
+        **Scenario 2: [Name]**
+        - Given [initial context]
+        - When [action is performed]
+        - Then [expected outcome]
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria-edge
+    attributes:
+      label: "Acceptance Criteria: Edge Cases & Negative Scenarios"
+      description: Given/When/Then for error handling, empty states, permissions,
+        etc.
+      placeholder: |
+        **Edge Case: Empty State**
+        - Given no data exists
+        - When user views the page
+        - Then a helpful empty state message is shown
+
+        **Edge Case: Permission Denied**
+        - Given user lacks permission
+        - When user attempts the action
+        - Then a 403 error with clear message is returned
+
+        **Edge Case: Validation Failure**
+        - Given invalid input
+        - When user submits
+        - Then specific validation errors are displayed
+
+        **Edge Case: Network Error**
+        - Given network is unavailable
+        - When action is attempted
+        - Then graceful degradation / retry is offered
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of Scope
+      description: What is explicitly NOT included in this story?
+      placeholder: |
+        - Will NOT include admin functionality
+        - Will NOT handle bulk operations
+        - Will NOT support legacy browsers
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Other stories, APIs, designs, or teams this depends on.
+      placeholder: |
+        - Requires #456 (API endpoint) to be complete
+        - Needs design approval for error states
+        - Depends on auth service v2
+    validations:
+      required: false
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open Questions
+      description: Clarifications needed before implementation can begin.
+      placeholder: |
+        - [ ] What happens when X?
+        - [ ] Should we support Y?
+        - [ ] Who approves Z?
+    validations:
+      required: false
+  - type: textarea
+    id: technical-notes
+    attributes:
+      label: Technical Notes
+      description: Implementation hints, relevant code areas, or technical constraints.
+      placeholder: |
+        - Affects: src/components/UserProfile
+        - Consider: caching strategy
+        - Watch out for: rate limiting
+    validations:
+      required: false
+  - type: checkboxes
+    id: dor-checklist
+    attributes:
+      label: Definition of Ready (DoR) Checklist
+      description: A story is NOT ready for implementation until these are addressed.
+      options:
+        - label: User value is clearly stated
+          required: true
+        - label: Success metric is defined (quantified when possible)
+          required: true
+        - label: Acceptance criteria are complete (happy path + edge cases)
+          required: true
+        - label: Dependencies are identified
+          required: true
+        - label: Out of scope is explicitly listed
+          required: true
+        - label: Data model impact is assessed (new fields, migrations)
+          required: false
+        - label: Security/privacy implications are reviewed
+          required: false
+        - label: Telemetry/observability requirements are defined
+          required: false
+        - label: UX states are defined (loading, empty, error)
+          required: false
+        - label: Rollout strategy is considered (feature flags, canary)
+          required: false
+  - type: dropdown
+    id: story-points
+    attributes:
+      label: Estimated Complexity
+      description: Relative sizing (final estimate determined in sprint planning).
+      options:
+        - "1 - Trivial (hours)"
+        - "2 - Small (1-2 days)"
+        - "3 - Medium (3-5 days)"
+        - "5 - Large (1 week)"
+        - "8 - Very Large (consider splitting)"
+        - "? - Needs spike/investigation"
+      default: 2
+    validations:
+      required: true

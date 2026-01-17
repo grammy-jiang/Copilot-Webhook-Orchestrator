@@ -1,0 +1,237 @@
+name: "🚨 Incident Report"
+description: "Document a production incident with timeline, impact, root cause, and
+  action items."
+title: "[Incident]: "
+labels: ["incident", "postmortem", "needs-review"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Incident Report (Post-Incident Review)
+
+        Use this template to document production incidents after resolution.
+        This feeds into the **incident-scribe** and **runbook-and-ops-docs** agents.
+
+        The goal is **learning, not blame**. Focus on systemic improvements.
+  - type: input
+    id: incident-id
+    attributes:
+      label: Incident ID
+      description: Unique identifier for this incident (e.g., INC-2024-001).
+      placeholder: "INC-YYYY-NNN"
+    validations:
+      required: true
+  - type: input
+    id: incident-date
+    attributes:
+      label: Incident Date
+      description: When did this incident occur?
+      placeholder: "2024-01-15"
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How severe was this incident?
+      options:
+        - "SEV1 - Critical: Complete outage, data loss, security breach"
+        - "SEV2 - Major: Significant degradation, major feature unavailable"
+        - "SEV3 - Minor: Partial degradation, workaround available"
+        - "SEV4 - Low: Minimal impact, cosmetic issues"
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: Current Status
+      description: What is the current status of this incident?
+      options:
+        - "Resolved - Incident is fully resolved"
+        - "Mitigated - Impact reduced, root cause not fixed"
+        - "Monitoring - Fix deployed, monitoring for recurrence"
+        - "Ongoing - Incident is still in progress"
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: Incident Summary
+      description: Brief, factual summary of what happened.
+      placeholder: |
+        On January 15, 2024, between 14:00-16:30 UTC, users experienced
+        login failures due to an expired TLS certificate on the authentication
+        service. Approximately 15,000 users were affected. The incident was
+        resolved by renewing the certificate.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact Assessment
+      description: Who and what was affected? Quantify if possible.
+      placeholder: |
+        **User Impact:**
+        - ~15,000 users unable to log in
+        - ~500 support tickets received
+        - Estimated 2,500 failed transactions
+
+        **Business Impact:**
+        - Estimated revenue loss: $XX,XXX
+        - SLA breach: Yes (99.9% → 98.5% for the day)
+        - Reputation: Negative social media mentions
+
+        **Systems Affected:**
+        - Authentication service
+        - All downstream services requiring auth
+    validations:
+      required: true
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Incident Timeline
+      description: Chronological sequence of events (detection → resolution).
+      placeholder: |
+        | Time (UTC) | Event |
+        |------------|-------|
+        | 14:00 | Certificate expires |
+        | 14:05 | First user reports login failure |
+        | 14:15 | Monitoring alert fires (error rate > 5%) |
+        | 14:20 | On-call engineer paged |
+        | 14:35 | Root cause identified (expired cert) |
+        | 14:45 | New certificate requested |
+        | 15:30 | New certificate issued |
+        | 15:45 | Certificate deployed to production |
+        | 16:00 | Services recovering, error rate dropping |
+        | 16:30 | Incident declared resolved |
+
+        **Time to Detect (TTD):** 15 minutes
+        **Time to Mitigate (TTM):** 1 hour 45 minutes
+        **Total Duration:** 2 hours 30 minutes
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root Cause Analysis
+      description: What was the underlying cause? Use 5 Whys if helpful.
+      placeholder: |
+        **Immediate cause:**
+        TLS certificate for auth.example.com expired.
+
+        **5 Whys:**
+        1. Why did users fail to log in? → TLS handshake failed
+        2. Why did TLS fail? → Certificate expired
+        3. Why wasn't it renewed? → Auto-renewal failed silently
+        4. Why did auto-renewal fail? → DNS validation failed (wrong DNS provider)
+        5. Why was DNS provider wrong? → Configuration drift after infra migration
+
+        **Root cause:**
+        DNS provider configuration was not updated after infrastructure migration
+        in October 2023, causing Let's Encrypt auto-renewal to fail.
+    validations:
+      required: true
+  - type: textarea
+    id: contributing-factors
+    attributes:
+      label: Contributing Factors
+      description: What other factors contributed to the incident or its duration?
+      placeholder: |
+        - No monitoring for certificate expiry
+        - Auto-renewal failure was silent (no alert)
+        - Runbook for certificate renewal was outdated
+        - On-call engineer unfamiliar with cert process
+        - Weekend staffing reduced response capacity
+    validations:
+      required: false
+  - type: textarea
+    id: resolution
+    attributes:
+      label: Resolution
+      description: How was the incident resolved?
+      placeholder: |
+        **Immediate fix:**
+        1. Manually renewed certificate via Let's Encrypt
+        2. Deployed new certificate to all auth service instances
+        3. Restarted services to pick up new cert
+        4. Verified login functionality restored
+
+        **Verification:**
+        - Monitored error rates for 1 hour post-fix
+        - Spot-checked login from multiple regions
+        - Confirmed no data loss or corruption
+    validations:
+      required: true
+  - type: textarea
+    id: action-items
+    attributes:
+      label: Action Items
+      description: What changes will prevent this from happening again?
+      placeholder: |
+        | Action | Owner | Priority | Due Date | Status |
+        |--------|-------|----------|----------|--------|
+        | Add certificate expiry monitoring | @devops | High | 2024-01-22 | 🔴 TODO |
+        | Fix DNS provider configuration | @infra | High | 2024-01-19 | 🟡 In Progress |
+        | Add auto-renewal failure alerting | @devops | High | 2024-01-22 | 🔴 TODO |
+        | Update certificate renewal runbook | @oncall | Medium | 2024-01-26 | 🔴 TODO |
+        | Add cert renewal to pre-deploy checklist | @release | Medium | 2024-01-26 | 🔴 TODO |
+        | Training: cert management for on-call | @manager | Low | 2024-02-15 | 🔴 TODO |
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: lessons-learned
+    attributes:
+      label: Lessons Learned
+      description: What did we learn from this incident?
+      placeholder: |
+        **What went well:**
+        - Alert fired within 15 minutes of impact
+        - Team mobilized quickly
+        - Clear communication in incident channel
+
+        **What could be improved:**
+        - Need proactive cert expiry monitoring
+        - Runbooks need regular review
+        - Auto-renewal should have failure alerting
+
+        **Surprising discoveries:**
+        - DNS config drift went unnoticed for 3 months
+        - Multiple services had similar risk
+    validations:
+      required: false
+  - type: textarea
+    id: related-incidents
+    attributes:
+      label: Related Incidents / Issues
+      description: Link to related incidents, bugs, or improvement issues.
+      placeholder: |
+        - Similar: INC-2023-042 (also cert-related)
+        - Created: #567 (cert monitoring implementation)
+        - Created: #568 (runbook update)
+    validations:
+      required: false
+  - type: checkboxes
+    id: postmortem-checklist
+    attributes:
+      label: Postmortem Checklist
+      description: Ensure the incident review is complete.
+      options:
+        - label: Timeline is accurate and complete
+          required: true
+        - label: Root cause is identified (not just symptoms)
+          required: true
+        - label: Impact is quantified where possible
+          required: true
+        - label: Action items have owners and due dates
+          required: true
+        - label: Lessons learned are documented
+          required: false
+        - label: Related monitoring/alerting gaps identified
+          required: false
+        - label: Runbook updates identified
+          required: false
+        - label: Blameless tone maintained throughout
+          required: true

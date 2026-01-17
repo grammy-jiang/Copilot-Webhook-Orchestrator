@@ -1,0 +1,188 @@
+name: "🏗️ Architecture Decision Record (ADR)"
+description: "Document an architecture decision with context, options, and consequences."
+title: "[ADR]: "
+labels: ["architecture", "adr", "needs-review"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Architecture Decision Record (ADR)
+
+        Use this template to document significant architectural decisions.
+        ADRs capture the **context**, **options considered**, **decision made**, and **consequences**.
+
+        This feeds into the **arch-spec-author** and **risk-and-nfr-gate** agents.
+  - type: input
+    id: adr-number
+    attributes:
+      label: ADR Number
+      description: Sequential identifier (e.g., ADR-001). Leave blank for auto-assignment.
+      placeholder: "ADR-XXX"
+    validations:
+      required: false
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      description: Current status of this ADR.
+      options:
+        - "Proposed - Under discussion"
+        - "Accepted - Decision made"
+        - "Deprecated - Superseded by another ADR"
+        - "Rejected - Not proceeding"
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What is the situation that requires a decision? What forces are
+        at play?
+      placeholder: |
+        We are building a new user authentication system. The current system uses
+        session-based auth, but we need to support multiple clients (web, mobile, API).
+
+        Forces:
+        - Need stateless authentication for horizontal scaling
+        - Must support SSO integration
+        - Security compliance requires audit logging
+        - Team has limited experience with OAuth2
+    validations:
+      required: true
+  - type: textarea
+    id: decision-drivers
+    attributes:
+      label: Decision Drivers
+      description: What criteria are most important for this decision?
+      placeholder: |
+        - Security: Must meet SOC2 compliance requirements
+        - Scalability: Must support 10x current load
+        - Developer Experience: Should integrate with existing tooling
+        - Time to Market: Must ship within Q2
+        - Cost: Infrastructure budget is constrained
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options Considered
+      description: List the options with pros and cons for each.
+      placeholder: |
+        ## Option 1: JWT with OAuth2
+
+        **Pros:**
+        - Stateless, scales horizontally
+        - Industry standard, well-documented
+        - Good library support
+
+        **Cons:**
+        - Token revocation is complex
+        - Larger token size
+        - Team learning curve
+
+        ## Option 2: Session-based with Redis
+
+        **Pros:**
+        - Simple to implement
+        - Easy token revocation
+        - Team familiarity
+
+        **Cons:**
+        - Requires session store (Redis)
+        - Not truly stateless
+        - Additional infrastructure cost
+
+        ## Option 3: [Another option]
+        ...
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision
+      description: What is the chosen option and why?
+      placeholder: |
+        We will use **Option 1: JWT with OAuth2**.
+
+        **Rationale:**
+        - Aligns with our horizontal scaling requirements
+        - Industry standard makes hiring and onboarding easier
+        - Token revocation concern mitigated by short-lived tokens + refresh tokens
+        - Investment in team training is worthwhile for long-term benefits
+    validations:
+      required: true
+  - type: textarea
+    id: consequences
+    attributes:
+      label: Consequences
+      description: What are the positive and negative consequences of this decision?
+      placeholder: |
+        **Positive:**
+        - Simplified deployment (no session store required)
+        - Better mobile client support
+        - Enables future microservices architecture
+
+        **Negative:**
+        - Team needs OAuth2/JWT training (2-3 days)
+        - Need to implement token refresh logic in all clients
+        - Token revocation requires blocklist or short expiry
+
+        **Risks:**
+        - Token leakage could be exploited until expiry
+        - Mitigation: Use short-lived tokens (15 min) + secure refresh token rotation
+
+        **Technical Debt:**
+        - Need to migrate existing session-based clients
+    validations:
+      required: true
+  - type: textarea
+    id: nfr-impact
+    attributes:
+      label: Non-Functional Requirements Impact
+      description: How does this decision affect NFRs (security, performance, reliability,
+        etc.)?
+      placeholder: |
+        | NFR | Impact | Notes |
+        |-----|--------|-------|
+        | Security | ✅ Positive | Industry-standard, auditable |
+        | Performance | ⚠️ Neutral | Slightly larger payloads |
+        | Reliability | ✅ Positive | No session store dependency |
+        | Observability | ⚠️ Needs work | Need to add token audit logging |
+        | Scalability | ✅ Positive | Stateless enables horizontal scale |
+      render: markdown
+    validations:
+      required: false
+  - type: textarea
+    id: related-adrs
+    attributes:
+      label: Related ADRs / Issues
+      description: Link to related decisions, issues, or documentation.
+      placeholder: |
+        - Supersedes: ADR-005 (Session-based auth)
+        - Related: #234 (SSO integration feature)
+        - Depends on: ADR-012 (API versioning strategy)
+    validations:
+      required: false
+  - type: checkboxes
+    id: review-checklist
+    attributes:
+      label: Review Checklist
+      description: Ensure the ADR is complete before requesting review.
+      options:
+        - label: Context clearly explains the forces and constraints
+          required: true
+        - label: At least 2 options are evaluated with pros/cons
+          required: true
+        - label: Decision rationale is explicit and traceable to drivers
+          required: true
+        - label: Consequences (positive and negative) are documented
+          required: true
+        - label: Security implications are considered
+          required: false
+        - label: Performance implications are considered
+          required: false
+        - label: Migration/rollback strategy is outlined (if applicable)
+          required: false

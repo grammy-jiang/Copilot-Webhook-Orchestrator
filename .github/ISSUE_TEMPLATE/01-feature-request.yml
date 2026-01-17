@@ -1,0 +1,124 @@
+name: "🚀 Feature Request"
+description: "Propose a new feature or enhancement. This becomes the intake for the
+  requirements agent."
+title: "[Feature]: "
+labels: ["feature", "needs-triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request Intake
+
+        This form captures the initial idea for a new feature. The output feeds into the **requirements agent** to generate a feature one-pager with risks, NFRs, and user stories.
+
+        Please provide as much context as possible.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Who experiences this problem?
+      placeholder: |
+        Describe the pain point or opportunity:
+        - Who is affected?
+        - How often does this occur?
+        - What is the current workaround (if any)?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: What do you want to happen? Describe the desired outcome.
+      placeholder: |
+        Describe the ideal solution:
+        - What should the user be able to do?
+        - What should the system do differently?
+    validations:
+      required: true
+  - type: textarea
+    id: success-metrics
+    attributes:
+      label: Success Metrics
+      description: How will we know this feature is successful? What changes if we
+        win?
+      placeholder: |
+        Examples:
+        - Reduce support tickets by 20%
+        - Increase conversion rate by 5%
+        - Enable new use case X
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other solutions have you considered?
+      placeholder: |
+        - Alternative A: ...
+        - Alternative B: ...
+        - Why these don't fully solve the problem: ...
+    validations:
+      required: false
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints & Dependencies
+      description: Any known limitations, deadlines, compliance requirements, or dependencies?
+      placeholder: |
+        - Time constraint: Must ship by Q2
+        - Compliance: GDPR considerations
+        - Dependencies: Requires API X to be ready
+        - Platform: Must work on mobile
+    validations:
+      required: false
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Business Priority
+      description: How urgent is this feature?
+      options:
+        - "Critical - Blocking business goal"
+        - "High - Important for upcoming milestone"
+        - "Medium - Nice to have soon"
+        - "Low - Future consideration"
+      default: 2
+    validations:
+      required: true
+  - type: dropdown
+    id: user-segment
+    attributes:
+      label: Target Users
+      description: Who will primarily use this feature?
+      multiple: true
+      options:
+        - "End Users (external)"
+        - "Internal Users (staff)"
+        - "Developers (API consumers)"
+        - "Administrators"
+        - "All users"
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, mockups, screenshots, or links.
+      placeholder: |
+        - Link to design mockup: ...
+        - Related issues: #123, #456
+        - Competitor example: ...
+    validations:
+      required: false
+  - type: checkboxes
+    id: intake-checklist
+    attributes:
+      label: Intake Checklist
+      description: Confirm the following before submitting.
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I have provided a clear problem statement
+          required: true
+        - label: I have defined at least one success metric
+          required: true

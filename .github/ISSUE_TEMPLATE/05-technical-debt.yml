@@ -1,0 +1,178 @@
+name: "🔧 Technical Debt"
+description: "Track technical debt with risk assessment and refactoring scope."
+title: "[Tech Debt]: "
+labels: ["tech-debt", "needs-triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Technical Debt Tracking
+
+        Use this template to document and prioritize technical debt.
+        This feeds into the **risk-and-nfr-gate** agent for impact assessment.
+
+        Technical debt should be tracked, prioritized, and addressed systematically.
+  - type: textarea
+    id: debt-description
+    attributes:
+      label: Debt Description
+      description: What is the technical debt? Where does it exist?
+      placeholder: |
+        The user authentication module uses a deprecated library (passport v0.4)
+        that has known security vulnerabilities and is no longer maintained.
+
+        Location: src/auth/*.js
+    validations:
+      required: true
+  - type: dropdown
+    id: debt-type
+    attributes:
+      label: Debt Type
+      description: What category of technical debt is this?
+      options:
+        - "Code Quality - Poor structure, duplication, complexity"
+        - "Dependencies - Outdated, vulnerable, or unmaintained packages"
+        - "Architecture - Design limitations, scalability issues"
+        - "Testing - Missing tests, flaky tests, poor coverage"
+        - "Documentation - Missing or outdated docs"
+        - "Infrastructure - CI/CD, deployment, monitoring gaps"
+        - "Security - Known vulnerabilities, compliance gaps"
+        - "Performance - Known bottlenecks, inefficiencies"
+    validations:
+      required: true
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Risk Level
+      description: What is the risk of NOT addressing this debt?
+      options:
+        - "Critical - Active security vulnerability or system instability"
+        - "High - Significant risk to reliability, security, or velocity"
+        - "Medium - Growing cost, will worsen over time"
+        - "Low - Minor inconvenience, can defer"
+    validations:
+      required: true
+  - type: textarea
+    id: current-impact
+    attributes:
+      label: Current Impact
+      description: How does this debt affect the team/system today?
+      placeholder: |
+        - Developer velocity: Takes 2x longer to add auth features
+        - Security: CVE-2024-XXXX is unpatched
+        - Testing: Auth tests are flaky (30% failure rate)
+        - Onboarding: New devs struggle with legacy patterns
+    validations:
+      required: true
+  - type: textarea
+    id: future-risk
+    attributes:
+      label: Future Risk (If Not Addressed)
+      description: What happens if we continue to ignore this debt?
+      placeholder: |
+        - 6 months: Library reaches end-of-life, no security patches
+        - 12 months: May block upgrade to Node 22
+        - 18 months: Compliance audit failure risk
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: What is the recommended approach to address this debt?
+      placeholder: |
+        **Recommended approach:**
+        1. Migrate from passport v0.4 to passport v0.7
+        2. Update all authentication strategies
+        3. Add comprehensive test coverage
+        4. Update documentation
+
+        **Alternative considered:**
+        - Switch to different auth library (higher risk, more work)
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Refactoring Scope
+      description: What files/modules are affected? What's the blast radius?
+      placeholder: |
+        **Files affected:**
+        - src/auth/passport.js
+        - src/auth/strategies/*.js
+        - src/middleware/auth.js
+        - tests/auth/*.test.js
+
+        **Blast radius:** Medium
+        - Auth module is isolated
+        - No changes to public API
+        - May affect 3 dependent services
+    validations:
+      required: true
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Effort
+      description: How much work is required to address this debt?
+      options:
+        - "Small - A few hours"
+        - "Medium - 1-3 days"
+        - "Large - 1-2 weeks"
+        - "XL - 2+ weeks (consider breaking down)"
+        - "Unknown - Needs spike/investigation"
+    validations:
+      required: true
+  - type: textarea
+    id: nfr-impact
+    attributes:
+      label: NFR Impact
+      description: Which non-functional requirements are affected?
+      placeholder: |
+        | NFR | Current State | After Fix |
+        |-----|---------------|-----------|
+        | Security | ❌ Vulnerable | ✅ Patched |
+        | Performance | ⚠️ Neutral | ⚠️ Neutral |
+        | Maintainability | ❌ Poor | ✅ Good |
+        | Testability | ❌ Flaky | ✅ Reliable |
+      render: markdown
+    validations:
+      required: false
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies & Blockers
+      description: What needs to happen before this can be addressed?
+      placeholder: |
+        - Requires: Team agreement on target library version
+        - Blocked by: None
+        - Should coordinate with: DevOps (deployment changes)
+    validations:
+      required: false
+  - type: textarea
+    id: related-issues
+    attributes:
+      label: Related Issues
+      description: Link to related bugs, features, or other debt items.
+      placeholder: |
+        - Related bugs: #123, #456
+        - Caused by: #78 (rushed implementation)
+        - Blocks: #901 (SSO feature)
+    validations:
+      required: false
+  - type: checkboxes
+    id: tracking-checklist
+    attributes:
+      label: Tracking Checklist
+      description: Ensure the debt is properly documented.
+      options:
+        - label: Debt is clearly described with location
+          required: true
+        - label: Risk level is assessed
+          required: true
+        - label: Current and future impact are documented
+          required: true
+        - label: Proposed solution is outlined
+          required: true
+        - label: Effort is estimated
+          required: true

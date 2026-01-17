@@ -1,0 +1,231 @@
+name: "🚢 Release Request"
+description: "Request a release with validation checklist and rollback plan."
+title: "[Release]: v"
+labels: ["release", "needs-approval"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Release Request
+
+        Use this template to request a production release.
+        This feeds into the **release-pipeline-author** and **prod-risk-and-rollback-gate** agents.
+
+        All releases require validation, rollback planning, and approval.
+  - type: input
+    id: version
+    attributes:
+      label: Version Number
+      description: Semantic version for this release.
+      placeholder: "1.2.3"
+    validations:
+      required: true
+  - type: input
+    id: release-branch
+    attributes:
+      label: Release Branch / Tag
+      description: Branch or commit SHA to release.
+      placeholder: "main @ abc1234 or release/v1.2.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: release-type
+    attributes:
+      label: Release Type
+      description: What type of release is this?
+      options:
+        - "Major - Breaking changes, major features"
+        - "Minor - New features, backward compatible"
+        - "Patch - Bug fixes, security patches"
+        - "Hotfix - Emergency fix for production issue"
+    validations:
+      required: true
+  - type: textarea
+    id: changelog
+    attributes:
+      label: Changelog / Release Notes
+      description: Summary of changes included in this release.
+      placeholder: |
+        ## What's Changed
+
+        ### Features
+        - Add user profile editing (#123)
+        - Implement dark mode (#456)
+
+        ### Bug Fixes
+        - Fix login redirect loop (#789)
+        - Resolve memory leak in dashboard (#101)
+
+        ### Security
+        - Update dependency X to patch CVE-2024-XXXX
+
+        ### Breaking Changes
+        - None
+
+        **Full Changelog:** v1.2.2...v1.2.3
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: included-prs
+    attributes:
+      label: Included Pull Requests
+      description: List of PRs included in this release.
+      placeholder: |
+        - #123 - Add user profile editing
+        - #456 - Implement dark mode
+        - #789 - Fix login redirect loop
+        - #101 - Resolve memory leak in dashboard
+    validations:
+      required: true
+  - type: dropdown
+    id: risk-level
+    attributes:
+      label: Release Risk Level
+      description: What is the risk level of this release?
+      options:
+        - "Low - Minor changes, well-tested, easy rollback"
+        - "Medium - Moderate changes, some risk, tested rollback"
+        - "High - Significant changes, elevated risk, complex rollback"
+        - "Critical - Major changes, high risk, requires extra validation"
+    validations:
+      required: true
+  - type: textarea
+    id: rollback-plan
+    attributes:
+      label: Rollback Plan
+      description: How do we rollback if something goes wrong?
+      placeholder: |
+        **Rollback strategy:** Blue-green deployment
+
+        **Steps to rollback:**
+        1. Switch load balancer to previous deployment
+        2. Verify traffic is routing to previous version
+        3. Monitor error rates for 15 minutes
+        4. If stable, mark release as failed
+
+        **Estimated rollback time:** < 5 minutes
+
+        **Data migration rollback:**
+        - No data migrations in this release
+        - OR: Run `rake db:rollback STEP=1`
+
+        **Feature flag fallback:**
+        - Disable `FEATURE_DARK_MODE` flag
+    validations:
+      required: true
+  - type: textarea
+    id: feature-flags
+    attributes:
+      label: Feature Flags
+      description: List any feature flags that control new functionality.
+      placeholder: |
+        | Flag | Default | Description |
+        |------|---------|-------------|
+        | FEATURE_DARK_MODE | false | Enables dark mode UI |
+        | FEATURE_PROFILE_V2 | false | New profile editing flow |
+    validations:
+      required: false
+  - type: textarea
+    id: monitoring
+    attributes:
+      label: Monitoring & Validation
+      description: How will we validate the release is successful?
+      placeholder: |
+        **Key metrics to watch:**
+        - Error rate: Should stay below 0.1%
+        - Latency p99: Should stay below 200ms
+        - Login success rate: Should stay above 99%
+
+        **Dashboards:**
+        - [Production Dashboard](link)
+        - [Error Tracking](link)
+
+        **Alerts configured:**
+        - Error rate > 1% triggers PagerDuty
+        - Latency p99 > 500ms triggers Slack alert
+
+        **Validation steps:**
+        1. Smoke test critical paths (login, checkout)
+        2. Monitor dashboards for 30 minutes
+        3. Check error tracking for new issues
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment-strategy
+    attributes:
+      label: Deployment Strategy
+      description: How will this be deployed?
+      options:
+        - "Blue-Green - Instant switch, easy rollback"
+        - "Canary - Gradual rollout (1% → 10% → 100%)"
+        - "Rolling - Gradual replacement of instances"
+        - "Feature Flag - Controlled by flag, not deployment"
+        - "Big Bang - All at once (not recommended)"
+    validations:
+      required: true
+  - type: textarea
+    id: deployment-schedule
+    attributes:
+      label: Deployment Schedule
+      description: When should this be deployed?
+      placeholder: |
+        **Preferred window:** Tuesday 10:00 AM PST
+        **Avoid:** Fridays, holidays, end of month
+
+        **Reason for timing:** Low traffic period, full team available
+
+        **Estimated duration:** 30 minutes
+    validations:
+      required: true
+  - type: textarea
+    id: stakeholder-notification
+    attributes:
+      label: Stakeholder Notification
+      description: Who needs to be notified about this release?
+      placeholder: |
+        - [ ] Engineering team (Slack #engineering)
+        - [ ] Product team (Slack #product)
+        - [ ] Support team (email support-team@)
+        - [ ] Customers (release notes blog post)
+    validations:
+      required: false
+  - type: checkboxes
+    id: release-checklist
+    attributes:
+      label: Release Readiness Checklist
+      description: Confirm the following before requesting approval.
+      options:
+        - label: All PRs are merged and CI is green
+          required: true
+        - label: Changelog / release notes are complete
+          required: true
+        - label: Rollback plan is documented and tested
+          required: true
+        - label: Feature flags are configured (if applicable)
+          required: false
+        - label: Monitoring and alerts are in place
+          required: true
+        - label: Database migrations are backward compatible (if applicable)
+          required: false
+        - label: Security review completed (if applicable)
+          required: false
+        - label: Performance testing completed (if applicable)
+          required: false
+        - label: Stakeholders are notified
+          required: false
+  - type: checkboxes
+    id: approval
+    attributes:
+      label: Approval
+      description: Required approvals for release.
+      options:
+        - label: Engineering lead approval
+          required: true
+        - label: QA sign-off
+          required: true
+        - label: Product owner approval (for major/minor releases)
+          required: false
+        - label: Security review (for security-sensitive changes)
+          required: false

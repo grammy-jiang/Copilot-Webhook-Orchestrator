@@ -1,0 +1,13 @@
+{
+    "editor.lineNumbers": "relative",
+    "editor.rulers": [
+        72,
+        80,
+        88,
+        120
+    ],
+    "files.exclude": {
+        "**/.pytest_cache": true,
+        "**/__pycache__": true
+    }
+}
