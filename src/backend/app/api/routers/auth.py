@@ -9,6 +9,7 @@ from sqlmodel import Session
 
 from app.api.deps import get_auth_service, get_current_user
 from app.api.schemas import UserResponse
+from app.config import get_settings
 from app.db.engine import get_session
 from app.db.models.user import User
 from app.services.auth import AuthService
@@ -98,7 +99,10 @@ async def oauth_callback(
     )
 
     # Redirect to frontend with session cookie
-    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    settings = get_settings()
+    response = RedirectResponse(
+        url=settings.frontend_url, status_code=status.HTTP_302_FOUND
+    )
     response.set_cookie(
         key="session_token",
         value=token,
@@ -135,7 +139,7 @@ async def get_current_user_info(
     )
 
 
-@router.post("/logout")
+@router.get("/logout")
 async def logout(
     session_token: Annotated[str | None, Cookie(alias="session_token")] = None,
     auth_service: Annotated[AuthService | None, Depends(get_auth_service)] = None,
@@ -147,11 +151,21 @@ async def logout(
         auth_service: The auth service.
 
     Returns:
-        Redirect to home page with session cookie cleared.
+        Redirect to login page with session cookie cleared.
     """
     if session_token and auth_service:
         auth_service.invalidate_session(session_token)
 
-    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-    response.delete_cookie(key="session_token")
+    settings = get_settings()
+    response = RedirectResponse(
+        url=f"{settings.frontend_url}/login?logout=success",
+        status_code=status.HTTP_302_FOUND,
+    )
+    # Delete cookie with same parameters as set_cookie for proper removal
+    response.delete_cookie(
+        key="session_token",
+        httponly=True,
+        secure=False,  # Set to True in production with HTTPS
+        samesite="lax",
+    )
     return response

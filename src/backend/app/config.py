@@ -57,6 +57,12 @@ class Settings(BaseSettings):
         description="CORS allowed origins",
     )
 
+    # Frontend
+    frontend_url: str = Field(
+        default="http://localhost:5173",
+        description="Frontend URL for redirects after authentication",
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

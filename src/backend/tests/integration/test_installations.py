@@ -21,7 +21,7 @@ class TestInstallationFlow:
         authenticated_client,
     ):
         """AC: User with no installations sees empty list."""
-        response = await authenticated_client.get("/installations")
+        response = await authenticated_client.get("/api/installations")
 
         assert response.status_code == 200
         data = response.json()
@@ -35,7 +35,7 @@ class TestInstallationFlow:
     ):
         """AC: Installation callback creates installation record."""
         response = await authenticated_client.get(
-            "/installations/callback",
+            "/api/installations/callback",
             params={"installation_id": 12345, "setup_action": "install"},
         )
 
@@ -52,12 +52,12 @@ class TestInstallationFlow:
         """AC: Installation appears in list after creation."""
         # First install
         await authenticated_client.get(
-            "/installations/callback",
+            "/api/installations/callback",
             params={"installation_id": 67890, "setup_action": "install"},
         )
 
         # Then list
-        response = await authenticated_client.get("/installations")
+        response = await authenticated_client.get("/api/installations")
 
         assert response.status_code == 200
         data = response.json()
@@ -75,7 +75,7 @@ class TestInstallationFlow:
     ):
         """AC: Get specific installation by ID."""
         response = await authenticated_client.get(
-            f"/installations/{test_installation.id}"
+            f"/api/installations/{test_installation.id}"
         )
 
         assert response.status_code == 200
@@ -91,7 +91,7 @@ class TestInstallationFlow:
         authenticated_client,
     ):
         """AC: Non-existent installation returns 404."""
-        response = await authenticated_client.get("/installations/99999")
+        response = await authenticated_client.get("/api/installations/99999")
 
         assert response.status_code == 404
 
@@ -130,7 +130,7 @@ class TestInstallationWebhooks:
         )
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": "installation",
@@ -173,7 +173,7 @@ class TestInstallationWebhooks:
         )
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": "installation",
@@ -237,7 +237,7 @@ class TestInstallationAuthorization:
             base_url="http://test",
             cookies={"session_token": token},
         ) as client:
-            response = await client.get(f"/installations/{test_installation.id}")
+            response = await client.get(f"/api/installations/{test_installation.id}")
 
         assert response.status_code == 404
 
@@ -249,14 +249,14 @@ class TestInstallationAuthorization:
         """AC: User can only have one active installation."""
         # First installation
         response1 = await authenticated_client.get(
-            "/installations/callback",
+            "/api/installations/callback",
             params={"installation_id": 11111, "setup_action": "install"},
         )
         assert response1.status_code == 200
 
         # Second installation attempt
         response2 = await authenticated_client.get(
-            "/installations/callback",
+            "/api/installations/callback",
             params={"installation_id": 22222, "setup_action": "install"},
         )
         assert response2.status_code == 400

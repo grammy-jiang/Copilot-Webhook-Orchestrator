@@ -5,59 +5,50 @@ import type { Event } from '$lib/types';
 
 describe('EventCard', () => {
 	const baseEvent: Event = {
-		id: 'event-1',
+		id: 1,
 		delivery_id: 'delivery-123',
 		event_type: 'pull_request',
-		event_action: 'opened',
-		repository_id: 'repo-1',
-		repository_name: 'testowner/testrepo',
-		actor: 'testuser',
-		processing_status: 'processed',
-		created_at: '2024-01-15T10:30:00Z',
-		github_timestamp: '2024-01-15T10:29:00Z'
+		action: 'opened',
+		repository_id: 1,
+		processed: true,
+		created_at: '2024-01-15T10:30:00Z'
 	};
 
-	it('renders event type and action', () => {
+	it('renders event type', () => {
 		render(EventCard, { props: { event: baseEvent } });
-		expect(screen.getByText('pull_request: opened')).toBeInTheDocument();
+		expect(screen.getByText('pull_request')).toBeInTheDocument();
 	});
 
-	it('renders processing status', () => {
+	it('renders event action', () => {
+		render(EventCard, { props: { event: baseEvent } });
+		expect(screen.getByText('opened')).toBeInTheDocument();
+	});
+
+	it('renders processed status', () => {
 		render(EventCard, { props: { event: baseEvent } });
 		expect(screen.getByText('processed')).toBeInTheDocument();
 	});
 
-	it('renders repository name when showRepository is true', () => {
+	it('renders repository ID when showRepository is true', () => {
 		render(EventCard, { props: { event: baseEvent, showRepository: true } });
-		expect(screen.getByText('testowner/testrepo')).toBeInTheDocument();
+		expect(screen.getByText(/Repository #1/)).toBeInTheDocument();
 	});
 
-	it('does not render repository name when showRepository is false', () => {
+	it('does not render repository ID when showRepository is false', () => {
 		render(EventCard, { props: { event: baseEvent, showRepository: false } });
-		expect(screen.queryByText('testowner/testrepo')).not.toBeInTheDocument();
-	});
-
-	it('renders actor name', () => {
-		render(EventCard, { props: { event: baseEvent } });
-		expect(screen.getByText('@testuser')).toBeInTheDocument();
+		expect(screen.queryByText(/Repository #1/)).not.toBeInTheDocument();
 	});
 
 	it('links to event detail page', () => {
 		render(EventCard, { props: { event: baseEvent } });
-		const link = screen.getByRole('link', { name: 'Details →' });
-		expect(link).toHaveAttribute('href', '/events/event-1');
+		const link = screen.getByTestId('event-card');
+		expect(link).toHaveAttribute('href', '/events/1');
 	});
 
-	it('shows appropriate status styling for different statuses', () => {
-		const receivedEvent = { ...baseEvent, processing_status: 'received' as const };
-		render(EventCard, { props: { event: receivedEvent } });
-		expect(screen.getByText('received')).toBeInTheDocument();
-	});
-
-	it('shows failed status correctly', () => {
-		const failedEvent = { ...baseEvent, processing_status: 'failed' as const };
-		render(EventCard, { props: { event: failedEvent } });
-		expect(screen.getByText('failed')).toBeInTheDocument();
+	it('shows pending status for unprocessed events', () => {
+		const pendingEvent = { ...baseEvent, processed: false };
+		render(EventCard, { props: { event: pendingEvent } });
+		expect(screen.getByText('pending')).toBeInTheDocument();
 	});
 
 	it('has correct test id', () => {

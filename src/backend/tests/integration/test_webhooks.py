@@ -43,7 +43,7 @@ class TestWebhookSignatureVerification:
         )
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": "pull_request",
@@ -75,7 +75,7 @@ class TestWebhookSignatureVerification:
         payload_bytes = json.dumps(valid_webhook_payload).encode()
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": "pull_request",
@@ -105,7 +105,7 @@ class TestWebhookSignatureVerification:
         payload_bytes = json.dumps(valid_webhook_payload).encode()
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": "pull_request",
@@ -128,7 +128,7 @@ class TestWebhookSignatureVerification:
         payload_bytes = json.dumps(valid_webhook_payload).encode()
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": "pull_request",
@@ -151,7 +151,7 @@ class TestWebhookSignatureVerification:
         payload_bytes = json.dumps(valid_webhook_payload).encode()
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Delivery": "test-delivery-missing-event",
@@ -200,7 +200,7 @@ class TestWebhookIdempotency:
 
         # First request
         response1 = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers=headers,
         )
@@ -208,7 +208,7 @@ class TestWebhookIdempotency:
 
         # Second request with same delivery ID
         response2 = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers=headers,
         )
@@ -241,7 +241,7 @@ class TestWebhookPayloadValidation:
         )
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=malformed_payload,
             headers={
                 "X-GitHub-Event": "pull_request",
@@ -297,7 +297,7 @@ class TestWebhookEventTypes:
         )
 
         response = await client.post(
-            "/webhooks/github",
+            "/api/webhooks/github",
             content=payload_bytes,
             headers={
                 "X-GitHub-Event": event_type,

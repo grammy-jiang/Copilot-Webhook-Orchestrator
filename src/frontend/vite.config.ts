@@ -28,5 +28,9 @@ export default defineConfig({
 	// Ensure browser conditions are used
 	resolve: {
 		conditions: ['browser']
+	},
+	// SSR configuration for packages that need transpilation
+	ssr: {
+		noExternal: ['@lucide/svelte']
 	}
 });

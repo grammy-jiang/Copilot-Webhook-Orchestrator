@@ -17,7 +17,7 @@ class TestOAuthFlow:
 
         @security AUTH-01
         """
-        response = await client.get("/auth/login", follow_redirects=False)
+        response = await client.get("/api/auth/login", follow_redirects=False)
 
         assert response.status_code == 302
         location = response.headers["location"]
@@ -63,7 +63,7 @@ class TestOAuthFlow:
         )
 
         response = await client.get(
-            "/auth/callback",
+            "/api/auth/callback",
             params={"code": "test_auth_code", "state": "test_state"},
             follow_redirects=False,
         )
@@ -102,7 +102,7 @@ class TestOAuthFlow:
         )
 
         response = await client.get(
-            "/auth/callback",
+            "/api/auth/callback",
             params={"code": "test_auth_code", "state": "test_state"},
             follow_redirects=False,
         )
@@ -123,7 +123,7 @@ class TestOAuthFlow:
         )
 
         response = await client.get(
-            "/auth/callback",
+            "/api/auth/callback",
             params={"code": "invalid_code", "state": "test_state"},
             follow_redirects=False,
         )
@@ -143,7 +143,7 @@ class TestSessionManagement:
 
         @security AUTH-04
         """
-        response = await authenticated_client.get("/auth/me")
+        response = await authenticated_client.get("/api/auth/me")
 
         assert response.status_code == 200
         data = response.json()
@@ -165,7 +165,7 @@ class TestSessionManagement:
             base_url="http://test",
             cookies={"session_token": token},
         ) as client:
-            response = await client.get("/auth/me")
+            response = await client.get("/api/auth/me")
 
         assert response.status_code == 401
 
@@ -174,9 +174,9 @@ class TestSessionManagement:
         self,
         authenticated_client,
     ):
-        """AC: POST /auth/logout invalidates session and clears cookie."""
-        response = await authenticated_client.post(
-            "/auth/logout", follow_redirects=False
+        """AC: GET /auth/logout invalidates session and clears cookie."""
+        response = await authenticated_client.get(
+            "/api/auth/logout", follow_redirects=False
         )
 
         assert response.status_code == 302
@@ -190,7 +190,7 @@ class TestSessionManagement:
         authenticated_client,
     ):
         """AC: GET /auth/me returns current user information."""
-        response = await authenticated_client.get("/auth/me")
+        response = await authenticated_client.get("/api/auth/me")
 
         assert response.status_code == 200
         data = response.json()
@@ -209,7 +209,7 @@ class TestUnauthenticatedAccess:
 
         @security AUTH-04
         """
-        response = await client.get("/auth/me")
+        response = await client.get("/api/auth/me")
 
         assert response.status_code == 401
 
@@ -220,7 +220,7 @@ class TestUnauthenticatedAccess:
         @security AUTH-04
         """
         response = await client.get(
-            "/auth/me",
+            "/api/auth/me",
             cookies={"session_token": "invalid_token"},
         )
 

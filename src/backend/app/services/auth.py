@@ -38,7 +38,7 @@ class AuthService:
         """
         params = {
             "client_id": self.settings.github_client_id,
-            "redirect_uri": f"http://localhost:{self.settings.port}/auth/callback",
+            "redirect_uri": f"http://localhost:{self.settings.port}/api/auth/callback",
             "scope": "user:email read:org",
             "state": state,
         }

@@ -83,7 +83,7 @@ class TestEventRetrieval:
         test_event,
     ):
         """AC: User can list their events."""
-        response = await authenticated_client.get("/events")
+        response = await authenticated_client.get("/api/events")
 
         assert response.status_code == 200
         data = response.json()
@@ -110,7 +110,7 @@ class TestEventRetrieval:
         session.commit()
 
         response = await authenticated_client.get(
-            "/events", params={"event_type": "push"}
+            "/api/events", params={"event_type": "push"}
         )
 
         assert response.status_code == 200
@@ -138,7 +138,7 @@ class TestEventRetrieval:
         session.commit()
 
         response = await authenticated_client.get(
-            "/events", params={"repository_id": test_repository.id}
+            "/api/events", params={"repository_id": test_repository.id}
         )
 
         assert response.status_code == 200
@@ -167,7 +167,7 @@ class TestEventRetrieval:
 
         # Get first page
         response1 = await authenticated_client.get(
-            "/events", params={"limit": 5, "offset": 0}
+            "/api/events", params={"limit": 5, "offset": 0}
         )
         assert response1.status_code == 200
         data1 = response1.json()
@@ -177,7 +177,7 @@ class TestEventRetrieval:
 
         # Get second page
         response2 = await authenticated_client.get(
-            "/events", params={"limit": 5, "offset": 5}
+            "/api/events", params={"limit": 5, "offset": 5}
         )
         assert response2.status_code == 200
         data2 = response2.json()
@@ -193,7 +193,7 @@ class TestEventRetrieval:
         test_event,
     ):
         """AC: User can get single event by ID."""
-        response = await authenticated_client.get(f"/events/{test_event.id}")
+        response = await authenticated_client.get(f"/api/events/{test_event.id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -252,7 +252,7 @@ class TestEventUserIsolation:
             base_url="http://test",
             cookies={"session_token": token},
         ) as client:
-            response = await client.get(f"/events/{test_event.id}")
+            response = await client.get(f"/api/events/{test_event.id}")
 
         assert response.status_code == 404
 
@@ -317,7 +317,7 @@ class TestEventUserIsolation:
             base_url="http://test",
             cookies={"session_token": token},
         ) as client:
-            response = await client.get("/events")
+            response = await client.get("/api/events")
 
         assert response.status_code == 200
         data = response.json()

@@ -25,9 +25,9 @@ describe('EmptyState', () => {
 			}
 		});
 
-		const actionLink = screen.getByRole('link', { name: 'Connect Repository' });
-		expect(actionLink).toBeInTheDocument();
-		expect(actionLink).toHaveAttribute('href', '/repositories/connect');
+		const actionButton = screen.getByRole('button', { name: 'Connect Repository' });
+		expect(actionButton).toBeInTheDocument();
+		expect(actionButton).toHaveAttribute('href', '/repositories/connect');
 	});
 
 	it('does not render action button when actionLabel is not provided', () => {
@@ -38,7 +38,7 @@ describe('EmptyState', () => {
 			}
 		});
 
-		expect(screen.queryByRole('link')).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /connect/i })).not.toBeInTheDocument();
 	});
 
 	it('has correct test id', () => {

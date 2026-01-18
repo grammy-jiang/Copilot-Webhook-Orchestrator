@@ -2,9 +2,10 @@
 	import { onMount } from 'svelte';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { goto } from '$app/navigation';
-	import Header from '$lib/components/Header.svelte';
+	import Sidebar from '$lib/components/Sidebar.svelte';
 	import RepositoryCard from '$lib/components/RepositoryCard.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
+	import { Button } from '$lib/components/ui/button';
 	import type { Repository, PaginatedResponse } from '$lib/types';
 
 	let repositories = $state<Repository[]>([]);
@@ -59,69 +60,119 @@
 	<title>Repositories | Copilot Workflow Orchestrator</title>
 </svelte:head>
 
-<div class="min-h-screen bg-background">
-	<Header />
+<div class="flex min-h-screen bg-background">
+	<Sidebar />
 
-	<main class="container mx-auto px-4 py-8">
-		<div class="mb-6 flex items-center justify-between">
-			<h1 class="text-2xl font-bold text-foreground">Repositories</h1>
-			<input
-				type="search"
-				placeholder="Search repositories..."
-				class="rounded-md border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-				value={searchQuery}
-				oninput={handleSearch}
-			/>
-		</div>
-
-		{#if loading}
-			<div class="flex items-center justify-center py-12">
-				<div
-					class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"
-				></div>
-			</div>
-		{:else if error}
-			<div
-				class="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive"
-			>
-				{error}
-			</div>
-		{:else if repositories.length === 0}
-			<EmptyState
-				title="No repositories found"
-				description={searchQuery
-					? 'No repositories match your search. Try a different query.'
-					: 'No repositories connected yet. Install the GitHub App to connect repositories.'}
-			/>
-		{:else}
-			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each repositories as repository (repository.id)}
-					<RepositoryCard {repository} />
-				{/each}
-			</div>
-
-			<!-- Pagination -->
-			{#if totalPages > 1}
-				<div class="mt-8 flex items-center justify-center gap-2">
-					<button
-						class="rounded-md border px-3 py-2 text-sm disabled:opacity-50"
-						disabled={currentPage === 1}
-						onclick={() => loadRepositories(currentPage - 1)}
-					>
-						Previous
-					</button>
-					<span class="text-sm text-muted-foreground">
-						Page {currentPage} of {totalPages}
-					</span>
-					<button
-						class="rounded-md border px-3 py-2 text-sm disabled:opacity-50"
-						disabled={currentPage === totalPages}
-						onclick={() => loadRepositories(currentPage + 1)}
-					>
-						Next
-					</button>
+	<main class="flex-1 overflow-auto">
+		<div class="container mx-auto max-w-7xl px-6 py-8">
+			<div class="mb-6 flex items-center justify-between">
+				<div>
+					<h1 class="text-3xl font-bold tracking-tight">Repositories</h1>
+					<p class="text-muted-foreground">Manage your connected repositories.</p>
 				</div>
+				<div class="relative">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+					>
+						<circle cx="11" cy="11" r="8" />
+						<path d="m21 21-4.3-4.3" />
+					</svg>
+					<input
+						type="search"
+						placeholder="Search repositories..."
+						class="h-10 w-64 rounded-lg border bg-background pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+						value={searchQuery}
+						oninput={handleSearch}
+					/>
+				</div>
+			</div>
+
+			{#if loading}
+				<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{#each [1, 2, 3, 4, 5, 6] as idx (idx)}
+						<div class="animate-pulse rounded-xl border bg-card p-5">
+							<div class="flex items-center gap-3">
+								<div class="h-10 w-10 rounded-lg bg-muted"></div>
+								<div class="flex-1">
+									<div class="mb-2 h-4 w-32 rounded bg-muted"></div>
+									<div class="h-3 w-16 rounded bg-muted"></div>
+								</div>
+							</div>
+							<div class="mt-4 flex justify-between">
+								<div class="h-3 w-16 rounded bg-muted"></div>
+								<div class="h-3 w-12 rounded bg-muted"></div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{:else if error}
+				<div
+					class="rounded-lg border border-destructive bg-destructive/10 p-4 text-destructive"
+				>
+					<div class="flex items-center gap-2">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="h-4 w-4"
+						>
+							<circle cx="12" cy="12" r="10" />
+							<line x1="12" y1="8" x2="12" y2="12" />
+							<line x1="12" y1="16" x2="12.01" y2="16" />
+						</svg>
+						{error}
+					</div>
+				</div>
+			{:else if repositories.length === 0}
+				<EmptyState
+					title="No repositories found"
+					description={searchQuery
+						? 'No repositories match your search. Try a different query.'
+						: 'No repositories connected yet. Install the GitHub App to connect repositories.'}
+				/>
+			{:else}
+				<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+					{#each repositories as repository (repository.id)}
+						<RepositoryCard {repository} />
+					{/each}
+				</div>
+
+				<!-- Pagination -->
+				{#if totalPages > 1}
+					<div class="mt-8 flex items-center justify-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={currentPage === 1}
+							onclick={() => loadRepositories(currentPage - 1)}
+						>
+							Previous
+						</Button>
+						<span class="px-4 text-sm text-muted-foreground">
+							Page {currentPage} of {totalPages}
+						</span>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={currentPage === totalPages}
+							onclick={() => loadRepositories(currentPage + 1)}
+						>
+							Next
+						</Button>
+					</div>
+				{/if}
 			{/if}
-		{/if}
+		</div>
 	</main>
 </div>

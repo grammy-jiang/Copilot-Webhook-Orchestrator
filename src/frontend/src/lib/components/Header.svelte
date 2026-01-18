@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { authStore } from '$lib/stores/auth.svelte';
-	import { goto } from '$app/navigation';
 
 	let isMenuOpen = $state(false);
 
-	async function handleLogout() {
-		await authStore.logout();
-		goto('/login?logout=success');
+	function handleLogout() {
+		// Redirect to logout endpoint which will clear cookie and redirect back
+		window.location.href = '/api/auth/logout';
 	}
 
 	function toggleMenu() {
@@ -53,21 +52,21 @@
 					class="flex items-center gap-2 rounded-full p-1 hover:bg-accent"
 					data-testid="user-menu-button"
 				>
-					{#if authStore.user.avatar_url}
+					{#if authStore.user.github_avatar_url}
 						<img
-							src={authStore.user.avatar_url}
-							alt={authStore.user.username}
+							src={authStore.user.github_avatar_url}
+							alt={authStore.user.github_login}
 							class="h-8 w-8 rounded-full"
 						/>
 					{:else}
 						<div
 							class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground"
 						>
-							{authStore.user.username[0].toUpperCase()}
+							{authStore.user.github_login[0].toUpperCase()}
 						</div>
 					{/if}
 					<span class="hidden text-sm font-medium md:inline"
-						>{authStore.user.username}</span
+						>{authStore.user.github_login}</span
 					>
 				</button>
 
@@ -78,10 +77,10 @@
 					>
 						<div class="p-2">
 							<div class="px-2 py-1.5 text-sm font-medium">
-								{authStore.user.username}
+								{authStore.user.github_name || authStore.user.github_login}
 							</div>
 							<div class="px-2 py-1.5 text-xs text-muted-foreground">
-								{authStore.user.email}
+								@{authStore.user.github_login}
 							</div>
 						</div>
 						<div class="border-t">

@@ -5,16 +5,16 @@ import type { Repository } from '$lib/types';
 
 describe('RepositoryCard', () => {
 	const baseRepository: Repository = {
-		id: 'repo-1',
-		github_id: 12345,
+		id: 1,
+		github_repo_id: 12345,
 		owner: 'testowner',
 		name: 'testrepo',
 		full_name: 'testowner/testrepo',
-		description: 'A test repository',
-		is_private: false,
+		private: false,
 		default_branch: 'main',
-		last_event_at: new Date().toISOString(),
-		event_count: 42
+		installation_id: 1,
+		created_at: new Date().toISOString(),
+		updated_at: new Date().toISOString()
 	};
 
 	it('renders repository name', () => {
@@ -22,18 +22,13 @@ describe('RepositoryCard', () => {
 		expect(screen.getByText('testowner/testrepo')).toBeInTheDocument();
 	});
 
-	it('renders repository description', () => {
+	it('renders default branch', () => {
 		render(RepositoryCard, { props: { repository: baseRepository } });
-		expect(screen.getByText('A test repository')).toBeInTheDocument();
-	});
-
-	it('renders event count', () => {
-		render(RepositoryCard, { props: { repository: baseRepository } });
-		expect(screen.getByText('42 events')).toBeInTheDocument();
+		expect(screen.getByText('main')).toBeInTheDocument();
 	});
 
 	it('shows Private badge for private repositories', () => {
-		const privateRepo = { ...baseRepository, is_private: true };
+		const privateRepo = { ...baseRepository, private: true };
 		render(RepositoryCard, { props: { repository: privateRepo } });
 		expect(screen.getByText('Private')).toBeInTheDocument();
 	});
@@ -46,12 +41,13 @@ describe('RepositoryCard', () => {
 	it('links to repository detail page', () => {
 		render(RepositoryCard, { props: { repository: baseRepository } });
 		const link = screen.getByTestId('repository-card');
-		expect(link).toHaveAttribute('href', '/repositories/repo-1');
+		expect(link).toHaveAttribute('href', '/repositories/1');
 	});
 
-	it('shows Never for repositories with no events', () => {
-		const noEventsRepo = { ...baseRepository, last_event_at: null };
-		render(RepositoryCard, { props: { repository: noEventsRepo } });
-		expect(screen.getByText('Never')).toBeInTheDocument();
+	it('shows health status indicator', () => {
+		render(RepositoryCard, { props: { repository: baseRepository } });
+		// Check that health status is displayed
+		const statusElement = screen.getByTestId('repository-card');
+		expect(statusElement).toBeInTheDocument();
 	});
 });

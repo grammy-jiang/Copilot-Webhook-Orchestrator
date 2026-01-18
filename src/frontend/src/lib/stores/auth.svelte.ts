@@ -11,7 +11,7 @@ class AuthStore {
 	}
 
 	get hasInstallation(): boolean {
-		return this.installation !== null && !this.installation.is_suspended;
+		return this.installation !== null && this.installation.status === 'active';
 	}
 
 	async fetchUser(): Promise<void> {
@@ -22,8 +22,9 @@ class AuthStore {
 			const response = await fetch('/api/auth/me');
 			if (response.ok) {
 				const data = await response.json();
-				this.user = data.user;
-				this.installation = data.installation ?? null;
+				// Backend returns UserResponse directly, not wrapped in { user, installation }
+				this.user = data;
+				this.installation = null; // TODO: Fetch installation separately if needed
 			} else if (response.status === 401) {
 				this.user = null;
 				this.installation = null;
@@ -41,7 +42,8 @@ class AuthStore {
 
 	async logout(): Promise<void> {
 		try {
-			await fetch('/api/auth/logout', { method: 'POST' });
+			// Use GET request to match the backend logout endpoint
+			await fetch('/api/auth/logout', { method: 'GET' });
 		} finally {
 			this.user = null;
 			this.installation = null;
