@@ -9,41 +9,37 @@ import { test, expect } from '@playwright/test';
  * @see Story 5: Minimal Dashboard
  */
 
-test.describe('Dashboard', () => {
-	// Note: These tests assume authenticated state via mock API or test fixtures
-	// In a real setup, you would need to mock the auth state
-
-	test.beforeEach(async ({ page }) => {
-		// Mock the auth API to return authenticated state
-		await page.route('/api/auth/me', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({
+// Helper to mock authenticated state matching authStore expectations
+async function mockAuthenticatedState(page: import('@playwright/test').Page) {
+	await page.route('/api/auth/me', async (route) => {
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				user: {
 					id: 'user-1',
-					login: 'testuser',
-					name: 'Test User',
-					avatar_url: 'https://github.com/testuser.png'
-				})
-			});
+					github_id: 12345,
+					username: 'testuser',
+					email: 'test@example.com',
+					avatar_url: 'https://github.com/testuser.png',
+					created_at: '2026-01-01T00:00:00Z'
+				},
+				installation: {
+					id: 'install-1',
+					installation_id: 67890,
+					account_login: 'testorg',
+					account_type: 'Organization',
+					is_suspended: false,
+					created_at: '2026-01-01T00:00:00Z'
+				}
+			})
 		});
+	});
+}
 
-		// Mock installations API
-		await page.route('/api/installations', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify([
-					{
-						id: 'install-1',
-						account_login: 'testorg',
-						account_type: 'Organization',
-						installed_at: '2026-01-15T10:00:00Z'
-					}
-				])
-			});
-		});
-
+test.describe('Dashboard', () => {
+	test.beforeEach(async ({ page }) => {
+		await mockAuthenticatedState(page);
 		await page.goto('/');
 	});
 
@@ -64,8 +60,8 @@ test.describe('Dashboard', () => {
 	 *     Then they should see their repositories
 	 */
 	test('should display repositories section', async ({ page }) => {
-		// Mock repositories API
-		await page.route('/api/repositories*', async (route) => {
+		// Mock repositories API (Dashboard uses /api/installations/repositories)
+		await page.route('/api/installations/repositories*', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
@@ -73,16 +69,21 @@ test.describe('Dashboard', () => {
 					items: [
 						{
 							id: 'repo-1',
+							github_id: 111,
+							owner: 'testorg',
+							name: 'repo1',
 							full_name: 'testorg/repo1',
 							description: 'Test repository 1',
-							private: false,
+							is_private: false,
+							default_branch: 'main',
 							event_count: 10,
 							last_event_at: '2026-01-18T12:00:00Z'
 						}
 					],
 					total: 1,
 					page: 1,
-					per_page: 10
+					per_page: 10,
+					pages: 1
 				})
 			});
 		});
@@ -108,17 +109,21 @@ test.describe('Dashboard', () => {
 					items: [
 						{
 							id: 'event-1',
+							delivery_id: 'delivery-1',
 							event_type: 'pull_request',
-							action: 'opened',
-							status: 'processed',
-							repository_full_name: 'testorg/repo1',
-							sender_login: 'developer',
-							received_at: '2026-01-18T14:00:00Z'
+							event_action: 'opened',
+							repository_id: 'repo-1',
+							repository_name: 'testorg/repo1',
+							actor: 'developer',
+							processing_status: 'processed',
+							created_at: '2026-01-18T14:00:00Z',
+							github_timestamp: '2026-01-18T14:00:00Z'
 						}
 					],
 					total: 1,
 					page: 1,
-					per_page: 5
+					per_page: 5,
+					pages: 1
 				})
 			});
 		});
@@ -136,7 +141,7 @@ test.describe('Dashboard', () => {
 	 */
 	test('should navigate to repository detail on click', async ({ page }) => {
 		// Mock repositories API
-		await page.route('/api/repositories*', async (route) => {
+		await page.route('/api/installations/repositories*', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
@@ -144,15 +149,21 @@ test.describe('Dashboard', () => {
 					items: [
 						{
 							id: 'repo-1',
+							github_id: 111,
+							owner: 'testorg',
+							name: 'repo1',
 							full_name: 'testorg/repo1',
 							description: 'Test repository',
-							private: false,
-							event_count: 10
+							is_private: false,
+							default_branch: 'main',
+							event_count: 10,
+							last_event_at: null
 						}
 					],
 					total: 1,
 					page: 1,
-					per_page: 10
+					per_page: 10,
+					pages: 1
 				})
 			});
 		});
@@ -169,25 +180,22 @@ test.describe('Dashboard', () => {
 
 test.describe('Dashboard - Empty State', () => {
 	test.beforeEach(async ({ page }) => {
-		// Mock auth as authenticated
+		// Mock auth as authenticated but with no installation
 		await page.route('/api/auth/me', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
 				body: JSON.stringify({
-					id: 'user-1',
-					login: 'testuser',
-					name: 'Test User'
+					user: {
+						id: 'user-1',
+						github_id: 12345,
+						username: 'testuser',
+						email: 'test@example.com',
+						avatar_url: null,
+						created_at: '2026-01-01T00:00:00Z'
+					},
+					installation: null
 				})
-			});
-		});
-
-		// Mock empty installations
-		await page.route('/api/installations', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify([])
 			});
 		});
 
@@ -202,34 +210,13 @@ test.describe('Dashboard - Empty State', () => {
 	test('should display empty state when no installations', async ({ page }) => {
 		// Assert - Empty state is visible
 		await expect(page.getByTestId('empty-state')).toBeVisible();
-		await expect(page.getByRole('link', { name: /connect|install/i })).toBeVisible();
+		await expect(page.getByRole('link', { name: /connect|repositories/i })).toBeVisible();
 	});
 });
 
 test.describe('Dashboard - User Menu', () => {
 	test.beforeEach(async ({ page }) => {
-		// Mock auth
-		await page.route('/api/auth/me', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({
-					id: 'user-1',
-					login: 'testuser',
-					name: 'Test User',
-					avatar_url: 'https://github.com/testuser.png'
-				})
-			});
-		});
-
-		await page.route('/api/installations', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify([{ id: 'install-1' }])
-			});
-		});
-
+		await mockAuthenticatedState(page);
 		await page.goto('/');
 	});
 
@@ -258,8 +245,9 @@ test.describe('Dashboard - User Menu', () => {
 			});
 		});
 
-		// Act - Click logout
-		await page.getByRole('button', { name: /logout/i }).click();
+		// Act - Open user menu and click logout
+		await page.getByTestId('user-menu-button').click();
+		await page.getByTestId('logout-button').click();
 
 		// Assert - Redirected to login
 		await expect(page).toHaveURL(/\/login/);
@@ -268,22 +256,7 @@ test.describe('Dashboard - User Menu', () => {
 
 test.describe('Dashboard Accessibility', () => {
 	test.beforeEach(async ({ page }) => {
-		await page.route('/api/auth/me', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({ id: 'user-1', login: 'testuser' })
-			});
-		});
-
-		await page.route('/api/installations', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify([{ id: 'install-1' }])
-			});
-		});
-
+		await mockAuthenticatedState(page);
 		await page.goto('/');
 	});
 
