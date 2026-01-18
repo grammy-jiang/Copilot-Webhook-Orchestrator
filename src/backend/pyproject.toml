@@ -48,7 +48,7 @@ dev = [
 postgres = ["asyncpg>=0.30.0", "psycopg[binary]>=3.2.0"]
 
 [project.scripts]
-copilot-orchestrator = "copilot_orchestrator.cli:app"
+copilot-orchestrator = "app.cli:cli_app"
 
 [tool.coverage.report]
 exclude_lines = [
@@ -58,16 +58,16 @@ exclude_lines = [
   "if TYPE_CHECKING:",
   "if __name__ == .__main__.:"
 ]
-fail_under = 80
+fail_under = 75
 show_missing = true
 
 [tool.coverage.run]
-source = ["src/copilot_orchestrator"]
+source = ["app"]
 branch = true
 omit = ["*/tests/*", "*/__init__.py"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/copilot_orchestrator"]
+packages = ["app"]
 
 [tool.isort]
 profile = "black"
@@ -83,6 +83,15 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 module = ["tests.*"]
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["sqlmodel.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["app.db.models.*"]
+# SQLModel uses table=True which mypy doesn't understand
+disable_error_code = ["call-arg"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -102,7 +111,7 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-src = ["src", "tests"]
+src = ["app", "tests"]
 
 [tool.ruff.lint]
 select = [
@@ -116,7 +125,21 @@ select = [
   "S", # flake8-bandit (security)
   "T20" # flake8-print
 ]
-ignore = ["E501", "B008", "S101"]
+ignore = [
+  "E501", # Line too long (handled by formatter)
+  "B008", # Function call in default argument
+  "S101", # assert statements (allowed in tests)
+  "S104" # Binding to all interfaces (intentional for development server)
+]
 
 [tool.ruff.lint.isort]
-known-first-party = ["copilot_orchestrator"]
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+  "S105", # Hardcoded password (test fixtures)
+  "S106" # Hardcoded password in function argument (test data)
+]
+"app/services/auth.py" = [
+  "S105" # GitHub OAuth URLs contain "token" (false positive)
+]

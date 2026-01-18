@@ -1,21 +1,26 @@
 """Pytest configuration and shared fixtures for all tests."""
 
+import hashlib
+import hmac
+import json
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock
-from uuid import uuid4
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-# These imports will fail until implementation exists (TDD Red phase)
-# from copilot_orchestrator.app import create_app
-# from copilot_orchestrator.db import get_session
-# from copilot_orchestrator.models import User, UserSession, Installation
-
+from app.db.engine import get_session
+from app.db.models.event import Event
+from app.db.models.installation import Installation
+from app.db.models.repository import Repository
+from app.db.models.session import Session as UserSession
+from app.db.models.user import User
+from app.main import create_app
+from app.services.crypto import generate_session_token, hash_token
 
 # =============================================================================
 # Database Fixtures
@@ -48,23 +53,28 @@ def fixture_session(engine):
 
 
 @pytest.fixture(name="app")
-def fixture_app(session):
-    """Create a test FastAPI application with test database.
+def fixture_app(engine, webhook_secret):
+    """Create a test FastAPI application with test database."""
+    from app.config import Settings, get_settings
 
-    This fixture will fail until the app is implemented (TDD Red phase).
-    """
-    # TODO: Uncomment when app is implemented
-    # from copilot_orchestrator.app import create_app
-    # from copilot_orchestrator.db import get_session
-    #
-    # app = create_app()
-    #
-    # def get_session_override():
-    #     return session
-    #
-    # app.dependency_overrides[get_session] = get_session_override
-    # return app
-    pytest.skip("App not implemented yet (TDD Red phase)")
+    app = create_app()
+
+    # Create test settings with webhook secret
+    test_settings = Settings(
+        github_webhook_secret=webhook_secret,
+        database_url="sqlite://",
+    )
+
+    def get_session_override():
+        with Session(engine) as session:
+            yield session
+
+    def get_settings_override() -> Settings:
+        return test_settings
+
+    app.dependency_overrides[get_session] = get_session_override
+    app.dependency_overrides[get_settings] = get_settings_override
+    return app
 
 
 @pytest.fixture(name="client")
@@ -82,48 +92,89 @@ async def fixture_client(app) -> AsyncGenerator[AsyncClient, None]:
 # =============================================================================
 
 
+@pytest.fixture(name="test_user")
+def fixture_test_user(session) -> User:
+    """Create a test user in the database."""
+    user = User(
+        github_id=12345678,
+        github_login="testuser",
+        github_name="Test User",
+        github_email="testuser@example.com",
+        github_avatar_url="https://avatars.githubusercontent.com/u/12345678",
+        access_token_hash=hash_token("gho_test_access_token"),
+        last_login_at=datetime.now(UTC),
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
+
+
 @pytest.fixture(name="test_user_data")
 def fixture_test_user_data() -> dict[str, Any]:
     """Test user data matching GitHub OAuth response."""
     return {
-        "id": uuid4(),
         "github_id": 12345678,
-        "username": "testuser",
-        "email": "testuser@example.com",
-        "avatar_url": "https://avatars.githubusercontent.com/u/12345678",
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC),
+        "github_login": "testuser",
+        "github_name": "Test User",
+        "github_email": "testuser@example.com",
+        "github_avatar_url": "https://avatars.githubusercontent.com/u/12345678",
     }
 
 
-@pytest.fixture(name="test_session_data")
-def fixture_test_session_data(test_user_data) -> dict[str, Any]:
-    """Test session data for authenticated requests."""
-    return {
-        "id": uuid4(),
-        "user_id": test_user_data["id"],
-        "session_token": "test_session_token_abc123",
-        "expires_at": datetime.now(UTC) + timedelta(days=30),
-        "last_activity_at": datetime.now(UTC),
-        "ip_address": "127.0.0.1",
-        "user_agent": "pytest-test-client",
-        "created_at": datetime.now(UTC),
-    }
+@pytest.fixture(name="test_session_token")
+def fixture_test_session_token() -> str:
+    """Generate a test session token."""
+    return generate_session_token()
 
 
-@pytest.fixture(name="expired_session_data")
-def fixture_expired_session_data(test_user_data) -> dict[str, Any]:
-    """Expired session data for testing session expiration."""
-    return {
-        "id": uuid4(),
-        "user_id": test_user_data["id"],
-        "session_token": "expired_session_token_xyz789",
-        "expires_at": datetime.now(UTC) - timedelta(days=1),  # Expired
-        "last_activity_at": datetime.now(UTC) - timedelta(days=31),
-        "ip_address": "127.0.0.1",
-        "user_agent": "pytest-test-client",
-        "created_at": datetime.now(UTC) - timedelta(days=31),
-    }
+@pytest.fixture(name="test_session")
+def fixture_test_session(
+    session, test_user, test_session_token
+) -> tuple[UserSession, str]:
+    """Create a test session in the database. Returns (session, raw_token)."""
+    user_session = UserSession(
+        user_id=test_user.id,
+        token_hash=hash_token(test_session_token),
+        expires_at=datetime.now(UTC) + timedelta(hours=24),
+        user_agent="pytest-test-client",
+        ip_address="127.0.0.1",
+    )
+    session.add(user_session)
+    session.commit()
+    session.refresh(user_session)
+    return user_session, test_session_token
+
+
+@pytest.fixture(name="authenticated_client")
+async def fixture_authenticated_client(
+    app, test_session
+) -> AsyncGenerator[AsyncClient, None]:
+    """Create an authenticated HTTP client with session cookie."""
+    _, token = test_session
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+        cookies={"session_token": token},
+    ) as client:
+        yield client
+
+
+@pytest.fixture(name="expired_session")
+def fixture_expired_session(session, test_user) -> tuple[UserSession, str]:
+    """Create an expired session in the database."""
+    token = generate_session_token()
+    user_session = UserSession(
+        user_id=test_user.id,
+        token_hash=hash_token(token),
+        expires_at=datetime.now(UTC) - timedelta(hours=1),  # Expired
+        user_agent="pytest-test-client",
+        ip_address="127.0.0.1",
+    )
+    session.add(user_session)
+    session.commit()
+    session.refresh(user_session)
+    return user_session, token
 
 
 # =============================================================================
@@ -131,26 +182,38 @@ def fixture_expired_session_data(test_user_data) -> dict[str, Any]:
 # =============================================================================
 
 
+@pytest.fixture(name="test_installation")
+def fixture_test_installation(session, test_user) -> Installation:
+    """Create a test installation in the database."""
+    installation = Installation(
+        github_installation_id=12345,
+        user_id=test_user.id,
+        account_type="User",
+        account_login="testuser",
+        account_id=12345678,
+        target_type="all",
+        permissions=json.dumps({"issues": "write", "pull_requests": "write"}),
+        events=json.dumps(["issues", "pull_request", "push"]),
+        status="active",
+    )
+    session.add(installation)
+    session.commit()
+    session.refresh(installation)
+    return installation
+
+
 @pytest.fixture(name="test_installation_data")
-def fixture_test_installation_data(test_user_data) -> dict[str, Any]:
+def fixture_test_installation_data(test_user) -> dict[str, Any]:
     """Test installation data for GitHub App."""
     return {
-        "id": uuid4(),
-        "installation_id": 12345,
-        "user_id": test_user_data["id"],
-        "account_login": "testuser",
+        "github_installation_id": 12345,
+        "user_id": test_user.id if hasattr(test_user, "id") else 1,
         "account_type": "User",
-        "target_type": "User",
-        "permissions": {
-            "issues": "write",
-            "pull_requests": "write",
-            "contents": "read",
-        },
+        "account_login": "testuser",
+        "account_id": 12345678,
+        "target_type": "all",
+        "permissions": {"issues": "write", "pull_requests": "write"},
         "events": ["issues", "pull_request", "push"],
-        "is_suspended": False,
-        "suspended_at": None,
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC),
     }
 
 
@@ -159,29 +222,81 @@ def fixture_test_installation_data(test_user_data) -> dict[str, Any]:
 # =============================================================================
 
 
+@pytest.fixture(name="test_repository")
+def fixture_test_repository(session, test_installation) -> Repository:
+    """Create a test repository in the database."""
+    repo = Repository(
+        github_repo_id=123456789,
+        installation_id=test_installation.id,
+        full_name="testuser/test-repo",
+        owner="testuser",
+        name="test-repo",
+        private=False,
+        default_branch="main",
+    )
+    session.add(repo)
+    session.commit()
+    session.refresh(repo)
+    return repo
+
+
 @pytest.fixture(name="test_repository_data")
 def fixture_test_repository_data() -> dict[str, Any]:
     """Test repository data."""
     return {
-        "id": uuid4(),
-        "github_id": 123456789,
+        "github_repo_id": 123456789,
+        "full_name": "testuser/test-repo",
         "owner": "testuser",
         "name": "test-repo",
-        "full_name": "testuser/test-repo",
-        "description": "A test repository",
-        "url": "https://github.com/testuser/test-repo",
-        "is_private": False,
+        "private": False,
         "default_branch": "main",
-        "last_event_at": None,
-        "event_count": 0,
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC),
+    }
+
+
+# =============================================================================
+# Event Fixtures
+# =============================================================================
+
+
+@pytest.fixture(name="test_event")
+def fixture_test_event(session, test_installation, test_repository, test_user) -> Event:
+    """Create a test event in the database."""
+    event = Event(
+        delivery_id="abc123-def456-ghi789",
+        event_type="pull_request",
+        action="opened",
+        repository_id=test_repository.id,
+        installation_id=test_installation.id,
+        user_id=test_user.id,
+        payload=json.dumps({"action": "opened", "number": 42}),
+        processed=False,
+    )
+    session.add(event)
+    session.commit()
+    session.refresh(event)
+    return event
+
+
+@pytest.fixture(name="test_event_data")
+def fixture_test_event_data() -> dict[str, Any]:
+    """Test event data for storage tests."""
+    return {
+        "delivery_id": "abc123-def456-ghi789",
+        "event_type": "pull_request",
+        "action": "opened",
+        "payload": {"action": "opened", "number": 42},
     }
 
 
 # =============================================================================
 # Webhook Fixtures
 # =============================================================================
+
+
+@pytest.fixture(name="webhook_secret")
+def fixture_webhook_secret() -> str:
+    """Test webhook secret for HMAC verification."""
+    return "test_webhook_secret_for_hmac_verification"
 
 
 @pytest.fixture(name="valid_webhook_payload")
@@ -211,22 +326,12 @@ def fixture_valid_webhook_payload() -> dict[str, Any]:
     }
 
 
-@pytest.fixture(name="webhook_secret")
-def fixture_webhook_secret() -> str:
-    """Test webhook secret for HMAC verification."""
-    return "test_webhook_secret_for_hmac_verification"
-
-
 @pytest.fixture(name="valid_webhook_signature")
 def fixture_valid_webhook_signature(
     valid_webhook_payload: dict[str, Any],
     webhook_secret: str,
 ) -> str:
     """Generate a valid HMAC-SHA256 signature for webhook testing."""
-    import hashlib
-    import hmac
-    import json
-
     payload_bytes = json.dumps(valid_webhook_payload, separators=(",", ":")).encode()
     signature = hmac.new(
         webhook_secret.encode(),
@@ -240,38 +345,6 @@ def fixture_valid_webhook_signature(
 def fixture_invalid_webhook_signature() -> str:
     """Invalid HMAC signature for testing rejection."""
     return "sha256=invalid_signature_that_should_be_rejected"
-
-
-# =============================================================================
-# Event Fixtures
-# =============================================================================
-
-
-@pytest.fixture(name="test_event_data")
-def fixture_test_event_data(
-    test_installation_data,
-    test_repository_data,
-) -> dict[str, Any]:
-    """Test event data for storage tests."""
-    return {
-        "id": uuid4(),
-        "delivery_id": "abc123-def456-ghi789",
-        "installation_id": test_installation_data["id"],
-        "repository_id": test_repository_data["id"],
-        "event_type": "pull_request",
-        "event_action": "opened",
-        "actor": "testuser",
-        "target_object_ids": {"pr_number": 42},
-        "received_at": datetime.now(UTC),
-        "github_timestamp": datetime.now(UTC) - timedelta(seconds=2),
-        "raw_payload": {"action": "opened", "number": 42},
-        "payload_storage": None,
-        "processing_status": "received",
-        "error_message": None,
-        "retry_count": 0,
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC),
-    }
 
 
 # =============================================================================
@@ -332,12 +405,5 @@ def fixture_mock_github_api() -> AsyncMock:
 
 @pytest.fixture(name="frozen_time")
 def fixture_frozen_time():
-    """Freeze time for deterministic testing.
-
-    Usage:
-        def test_something(frozen_time):
-            # All datetime.now() calls return 2026-01-18T12:00:00Z
-            ...
-    """
-    # TODO: Use freezegun or similar when implemented
+    """Freeze time for deterministic testing."""
     return datetime(2026, 1, 18, 12, 0, 0, tzinfo=UTC)

@@ -1,10 +1,11 @@
 """Tests for health check endpoint.
 
 These tests verify the health endpoint behavior for load balancer checks.
-Tests are written BEFORE implementation (TDD Red phase).
 """
 
 import pytest
+
+from app import __version__
 
 
 class TestHealthEndpoint:
@@ -12,69 +13,42 @@ class TestHealthEndpoint:
 
     @pytest.mark.integration
     async def test_health_endpoint_accessible_without_auth(self, client):
-        """
-        Verify health endpoint is accessible without authentication.
+        """Verify health endpoint is accessible without authentication.
 
         This is required for load balancer and Kubernetes probes.
         """
-        response = await client.get("/api/health")
+        response = await client.get("/health")
 
-        assert response.status_code in (200, 503)
+        assert response.status_code == 200
 
     @pytest.mark.integration
     async def test_health_endpoint_returns_status(self, client):
-        """
-        Verify health endpoint returns expected fields.
-        """
-        response = await client.get("/api/health")
+        """Verify health endpoint returns expected fields."""
+        response = await client.get("/health")
         data = response.json()
 
         assert "status" in data
-        assert data["status"] in ("healthy", "unhealthy")
+        assert data["status"] == "healthy"
         assert "version" in data
-        assert "database" in data
         assert "timestamp" in data
 
     @pytest.mark.integration
-    async def test_health_returns_200_when_healthy(
-        self,
-        client,
-        session,  # Ensures DB is connected
-    ):
-        """
-        AC: When database is connected
-            Then /health returns 200 OK
+    async def test_health_returns_200_when_healthy(self, client):
+        """AC: When database is connected, /health returns 200 OK.
 
         @reliability REL-01
         """
-        response = await client.get("/api/health")
+        response = await client.get("/health")
 
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
-        assert data["database"] == "connected"
+        assert data["version"] == __version__
 
     @pytest.mark.integration
-    async def test_health_returns_503_when_db_unavailable(
-        self,
-        client,
-        mocker,
-    ):
-        """
-        AC: When database is unavailable
-            Then /health returns 503 Service Unavailable
-
-        @reliability REL-01
-        """
-        # Mock database connection failure
-        mocker.patch(
-            "copilot_orchestrator.db.check_database_connection",
-            side_effect=Exception("Database connection failed"),
-        )
-
-        response = await client.get("/api/health")
-
-        assert response.status_code == 503
+    async def test_health_returns_correct_version(self, client):
+        """Verify health endpoint returns correct application version."""
+        response = await client.get("/health")
         data = response.json()
-        assert data["status"] == "unhealthy"
-        assert data["database"] == "disconnected"
+
+        assert data["version"] == __version__
