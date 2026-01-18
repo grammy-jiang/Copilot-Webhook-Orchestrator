@@ -1,0 +1,6 @@
+# Ignore artifacts:
+build
+coverage
+.svelte-kit
+node_modules
+pnpm-lock.yaml

@@ -144,36 +144,77 @@ pre-commit-install: ## Install pre-commit hooks
 	pre-commit install
 
 # =====================================================
-# Frontend (SvelteKit) - Placeholder for future development
+# Frontend (SvelteKit 2.x + pnpm)
 # =====================================================
 
-# Frontend commands will be added when frontend development begins.
-# Expected structure:
-#   FRONTEND_DIR := src/frontend
-#
-# frontend-install: ## Install frontend dependencies
-# 	cd $(FRONTEND_DIR) && npm install
-#
-# frontend-dev: ## Run frontend development server
-# 	cd $(FRONTEND_DIR) && npm run dev
-#
-# frontend-build: ## Build frontend for production
-# 	cd $(FRONTEND_DIR) && npm run build
-#
-# frontend-test: ## Run frontend tests
-# 	cd $(FRONTEND_DIR) && npm test
-#
-# frontend-lint: ## Lint frontend code
-# 	cd $(FRONTEND_DIR) && npm run lint
+FRONTEND_DIR := src/frontend
+
+frontend-install: ## Install frontend dependencies
+	cd $(FRONTEND_DIR) && pnpm install
+
+frontend-install-browsers: ## Install Playwright browsers for E2E tests
+	cd $(FRONTEND_DIR) && pnpm exec playwright install
+
+frontend-dev: ## Run frontend development server
+	cd $(FRONTEND_DIR) && pnpm dev
+
+frontend-build: ## Build frontend for production
+	cd $(FRONTEND_DIR) && pnpm build
+
+frontend-preview: ## Preview production build
+	cd $(FRONTEND_DIR) && pnpm preview
+
+frontend-test: ## Run frontend unit/component tests
+	cd $(FRONTEND_DIR) && pnpm test
+
+frontend-test-ui: ## Run frontend tests with UI
+	cd $(FRONTEND_DIR) && pnpm test:ui
+
+frontend-test-e2e: ## Run frontend E2E tests (Playwright)
+	cd $(FRONTEND_DIR) && pnpm test:e2e
+
+frontend-test-all: ## Run all frontend tests (unit + E2E)
+	cd $(FRONTEND_DIR) && pnpm test && pnpm test:e2e
+
+frontend-check: ## Run SvelteKit type checking
+	cd $(FRONTEND_DIR) && pnpm check
+
+frontend-lint: ## Lint frontend code
+	cd $(FRONTEND_DIR) && pnpm lint
+
+frontend-format: ## Format frontend code
+	cd $(FRONTEND_DIR) && pnpm format
+
+frontend-clean: ## Clean frontend build artifacts
+	cd $(FRONTEND_DIR) && rm -rf .svelte-kit build node_modules/.vite
+
+frontend-add: ## Add a frontend dependency (usage: make frontend-add pkg=<package>)
+	cd $(FRONTEND_DIR) && pnpm add $(pkg)
+
+frontend-add-dev: ## Add a frontend dev dependency (usage: make frontend-add-dev pkg=<package>)
+	cd $(FRONTEND_DIR) && pnpm add -D $(pkg)
 
 # =====================================================
 # Combined Commands
 # =====================================================
 
-setup: venv install-dev pre-commit-install ## Full development setup
-	@echo "Development environment ready!"
+setup: venv install-dev pre-commit-install ## Full backend development setup
+	@echo "Backend development environment ready!"
 	@echo "Run 'make test' to verify the setup."
 
-all-tests: test ## Run all tests (backend + frontend when available)
+setup-frontend: frontend-install frontend-install-browsers ## Full frontend development setup
+	@echo "Frontend development environment ready!"
+	@echo "Run 'make frontend-test' to verify the setup."
 
-all-lint: lint ## Run all linters (backend + frontend when available)
+setup-all: setup setup-frontend ## Full stack development setup
+	@echo "Full stack development environment ready!"
+
+all-tests: test frontend-test ## Run all tests (backend + frontend)
+
+all-lint: lint frontend-lint ## Run all linters (backend + frontend)
+
+all-check: check frontend-check ## Run all code quality checks
+
+dev-all: ## Run both backend and frontend dev servers (use separate terminals)
+	@echo "Run 'make run' in one terminal for backend (port 8000)"
+	@echo "Run 'make frontend-dev' in another terminal for frontend (port 5173)"

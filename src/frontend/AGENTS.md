@@ -14,16 +14,16 @@
 
 ## Finalized Stack
 
-| Attribute            | Value                            |
-| -------------------- | -------------------------------- |
-| **Framework**        | SvelteKit 2.x (Svelte 5)         |
-| **Language**         | TypeScript 5.x                   |
-| **Package Manager**  | pnpm                             |
-| **CSS Framework**    | Tailwind CSS 3.x                 |
-| **UI Components**    | shadcn-svelte                    |
-| **Unit Testing**     | Vitest + @testing-library/svelte |
-| **E2E Testing**      | Playwright                       |
-| **Code Quality**     | ESLint + Prettier                |
+| Attribute           | Value                            |
+| ------------------- | -------------------------------- |
+| **Framework**       | SvelteKit 2.x (Svelte 5)         |
+| **Language**        | TypeScript 5.x                   |
+| **Package Manager** | pnpm                             |
+| **CSS Framework**   | Tailwind CSS 3.x                 |
+| **UI Components**   | shadcn-svelte                    |
+| **Unit Testing**    | Vitest + @testing-library/svelte |
+| **E2E Testing**     | Playwright                       |
+| **Code Quality**    | ESLint + Prettier                |
 
 ---
 
@@ -40,18 +40,18 @@ npx playwright install    # Install browser binaries for E2E tests
 
 ### Development Workflow
 
-| Task                    | Command                 |
-| ----------------------- | ----------------------- |
-| **Start dev server**    | `pnpm dev`              |
-| **Run unit tests**      | `pnpm test`             |
-| **Run tests with UI**   | `pnpm test:ui`          |
-| **Run E2E tests**       | `pnpm test:e2e`         |
-| **Run all tests**       | `pnpm test:all`         |
-| **Type check**          | `pnpm check`            |
-| **Lint code**           | `pnpm lint`             |
-| **Format code**         | `pnpm format`           |
-| **Build for production**| `pnpm build`            |
-| **Preview production**  | `pnpm preview`          |
+| Task                     | Command         |
+| ------------------------ | --------------- |
+| **Start dev server**     | `pnpm dev`      |
+| **Run unit tests**       | `pnpm test`     |
+| **Run tests with UI**    | `pnpm test:ui`  |
+| **Run E2E tests**        | `pnpm test:e2e` |
+| **Run all tests**        | `pnpm test:all` |
+| **Type check**           | `pnpm check`    |
+| **Lint code**            | `pnpm lint`     |
+| **Format code**          | `pnpm format`   |
+| **Build for production** | `pnpm build`    |
+| **Preview production**   | `pnpm preview`  |
 
 ### Validation Before Committing
 
@@ -148,28 +148,28 @@ src/frontend/
 import type { User } from '$lib/types';
 
 class AuthStore {
-  user = $state<User | null>(null);
-  isLoading = $state(true);
+	user = $state<User | null>(null);
+	isLoading = $state(true);
 
-  get isAuthenticated() {
-    return this.user !== null;
-  }
+	get isAuthenticated() {
+		return this.user !== null;
+	}
 
-  async fetchUser() {
-    this.isLoading = true;
-    try {
-      const res = await fetch('/api/auth/me');
-      if (res.ok) {
-        this.user = await res.json();
-      }
-    } finally {
-      this.isLoading = false;
-    }
-  }
+	async fetchUser() {
+		this.isLoading = true;
+		try {
+			const res = await fetch('/api/auth/me');
+			if (res.ok) {
+				this.user = await res.json();
+			}
+		} finally {
+			this.isLoading = false;
+		}
+	}
 
-  logout() {
-    this.user = null;
-  }
+	logout() {
+		this.user = null;
+	}
 }
 
 export const auth = new AuthStore();
@@ -184,17 +184,17 @@ import { describe, it, expect } from 'vitest';
 import EventCard from '../EventCard.svelte';
 
 describe('EventCard', () => {
-  it('renders event type badge', () => {
-    const event = {
-      id: '1',
-      event_type: 'pull_request',
-      created_at: '2026-01-18T10:00:00Z',
-    };
+	it('renders event type badge', () => {
+		const event = {
+			id: '1',
+			event_type: 'pull_request',
+			created_at: '2026-01-18T10:00:00Z'
+		};
 
-    render(EventCard, { props: { event } });
+		render(EventCard, { props: { event } });
 
-    expect(screen.getByText('pull_request')).toBeInTheDocument();
-  });
+		expect(screen.getByText('pull_request')).toBeInTheDocument();
+	});
 });
 ```
 
@@ -210,25 +210,25 @@ Configure in `vite.config.ts`:
 
 ```typescript
 export default defineConfig({
-  server: {
-    proxy: {
-      '/api': 'http://localhost:8000',
-    },
-  },
+	server: {
+		proxy: {
+			'/api': 'http://localhost:8000'
+		}
+	}
 });
 ```
 
 ### Key Endpoints
 
-| Endpoint                  | Description                  |
-| ------------------------- | ---------------------------- |
-| `GET /api/health`         | Health check                 |
-| `GET /api/auth/login`     | Initiate OAuth flow          |
-| `GET /api/auth/callback`  | OAuth callback               |
-| `GET /api/auth/me`        | Current user                 |
-| `POST /api/auth/logout`   | Logout                       |
-| `GET /api/installations`  | List installations           |
-| `GET /api/events`         | List events (paginated)      |
+| Endpoint                 | Description             |
+| ------------------------ | ----------------------- |
+| `GET /api/health`        | Health check            |
+| `GET /api/auth/login`    | Initiate OAuth flow     |
+| `GET /api/auth/callback` | OAuth callback          |
+| `GET /api/auth/me`       | Current user            |
+| `POST /api/auth/logout`  | Logout                  |
+| `GET /api/installations` | List installations      |
+| `GET /api/events`        | List events (paginated) |
 
 See backend API schemas in `../backend/app/api/schemas.py`.
 
@@ -249,9 +249,9 @@ See backend API schemas in `../backend/app/api/schemas.py`.
 - **Naming**: `feature.spec.ts`
 - **Run**: `pnpm test:e2e`
 - **Critical paths**:
-  - Login → Dashboard flow
-  - Dashboard → Repository detail
-  - Event stream navigation
+    - Login → Dashboard flow
+    - Dashboard → Repository detail
+    - Event stream navigation
 
 ---
 
