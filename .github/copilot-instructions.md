@@ -1,209 +1,240 @@
-# Copilot Instructions
+# Copilot Coding Agent Instructions
 
-This file provides repository-wide instructions for GitHub Copilot.
-These rules apply to all Copilot interactions (VS Code Chat, Coding Agent).
+This file provides repository-wide instructions for GitHub Copilot coding agents.
+**Trust these instructions.** Only search or explore if information here is incomplete or in error.
 
-______________________________________________________________________
+---
 
-## Project Context
+## Custom Agent Usage
 
-This is an **agentic development template** repository containing:
+This repository contains multiple custom agents in `.github/agents/` for different use cases.
 
-- Custom GitHub Copilot agents (`.github/agents/*.agent.md`)
-- Skills for reusable behaviors (`.github/skills/*/SKILL.md`)
-- Best practices documentation (`docs/best_practices/`)
-- Issue templates for structured backlog management (`.github/ISSUE_TEMPLATE/`)
+**ALWAYS follow this protocol:**
+1. **At the beginning** of every reply, explicitly state which custom agent you are using
+2. **At the end** of every reply, confirm which custom agent was used
+3. **If work is complete**, recommend which custom agent should be used in the next step
 
-The project follows an **agent-driven SDLC** with distinct lifecycle stages:
-Requirements → Architecture → UI/UX → Implementation → Testing → Review → Release/Ops
+---
 
-______________________________________________________________________
+## Repository Overview
 
-## Issue Template Integration
+**Copilot Webhook Orchestrator** — A webhook-driven automation service for GitHub Copilot workflow management.
 
-When generating content that will become a GitHub Issue, output in a format
-compatible with our Issue Templates located in `.github/ISSUE_TEMPLATE/`.
+| Attribute | Value |
+|-----------|-------|
+| **Type** | Python web service (FastAPI backend) |
+| **Language** | Python 3.12 |
+| **Framework** | FastAPI + SQLModel (SQLAlchemy + Pydantic) |
+| **Package Manager** | uv (https://github.com/astral-sh/uv) |
+| **Database** | SQLite (dev) / PostgreSQL (prod) |
+| **Test Framework** | pytest (async mode) |
 
-### Available Issue Templates
+---
 
-| Template | Use When | Key Fields |
-|----------|----------|------------|
-| `01-feature-request.yml` | Proposing new features | Problem, Solution, Success Metrics, Constraints |
-| `02-user-story.yml` | Creating backlog stories | User Story, AC (happy + edge), DoR Checklist, Out of Scope |
-| `03-bug-report.yml` | Reporting bugs | Current/Expected Behavior, Repro Steps, Environment |
-| `04-architecture-decision.yml` | Documenting ADRs | Context, Options, Decision, Consequences |
-| `05-technical-debt.yml` | Tracking tech debt | Description, Risk Level, NFR Impact, Refactor Scope |
-| `06-test-case-gap.yml` | Missing test coverage | Related Story, Untested AC, Proposed Tests |
-| `07-release-request.yml` | Requesting releases | Version, Changelog, Rollback Plan, Monitoring |
-| `08-incident-report.yml` | Post-incident reviews | Timeline, Root Cause, Impact, Action Items |
+## Build & Validation Commands
 
-### Output Format Rules
+**All commands run from repository root.** Use the Makefile; do not run uv/pytest directly.
 
-When asked to generate a user story, feature request, bug report, ADR, or similar:
+### Required Setup (run once)
 
-1. **Structure output to match the corresponding Issue Template fields**
-1. **Include all required fields** (marked with `required: true` in the template)
-1. **Use the exact field names** from the template for easy copy-paste
-1. **Do not invent fields** that don't exist in the template
-
-______________________________________________________________________
-
-## User Story Standards (INVEST)
-
-All user stories MUST satisfy **INVEST** criteria:
-
-- **I**ndependent: Can be developed without blocking or being blocked
-- **N**egotiable: Captures intent, not implementation details
-- **V**aluable: Delivers clear business or user value
-- **E**stimable: Small and clear enough to estimate
-- **S**mall: Completable within one iteration (1-2 weeks max)
-- **T**estable: Has verifiable acceptance criteria
-
-### Acceptance Criteria Format
-
-Use **Given/When/Then** (Gherkin) format:
-
-```gherkin
-Scenario: [Name]
-  Given [initial context]
-  When [action is performed]
-  Then [expected outcome]
+```bash
+make install-dev        # Install all dependencies including dev tools
+make pre-commit-install # Install pre-commit hooks
 ```
 
-**Always include edge cases:**
+### Development Workflow
 
-- Empty/null/missing data states
-- Permission/authorization failures
-- Validation failures
-- Network/timeout errors
-- Concurrency/idempotency (where applicable)
+| Task | Command |
+|------|---------|
+| **Run all tests** | `make test` |
+| **Run tests with coverage** | `make test-cov` |
+| **Run unit tests only** | `make test-unit` |
+| **Run integration tests only** | `make test-integration` |
+| **Lint code** | `make lint` |
+| **Format code** | `make format` |
+| **Fix lint issues** | `make lint-fix` |
+| **Format + lint fix** | `make fix` |
+| **Run dev server** | `make run` |
 
-______________________________________________________________________
+### Validation Before Committing
 
-## Definition of Ready (DoR)
+**ALWAYS run these before declaring work complete:**
 
-A story is NOT ready for implementation until:
+```bash
+make test         # All tests must pass
+make lint         # Must show "All checks passed!"
+make format-check # Must show "files already formatted"
+```
 
-- [ ] User value is clearly stated
-- [ ] Success metric is defined (quantified when possible)
-- [ ] Acceptance criteria are complete (happy path + edge cases)
-- [ ] Dependencies are identified
-- [ ] Out of scope is explicitly listed
-- [ ] Data model impact is assessed
-- [ ] Security/privacy implications are reviewed
-- [ ] UX states are defined (loading, empty, error)
+### Coverage Requirements
 
-______________________________________________________________________
+- **Core modules** (`app/services/`, `app/api/`): minimum **95%** coverage
+- **Other modules**: minimum **85%** coverage
 
-## Code Generation Standards
+Run `make test-cov` to verify coverage.
 
-### General Rules
+---
 
-- Follow existing patterns in the codebase
-- Prefer small, focused changes over large refactors
-- Include tests for behavior changes
-- No secrets or sensitive data in code
-- No new dependencies without explicit request
+## Project Structure
+
+```
+src/backend/                    # Python backend application
+├── app/                        # Main application package
+│   ├── main.py                 # FastAPI app factory (create_app)
+│   ├── config.py               # Pydantic Settings (env vars)
+│   ├── cli.py                  # Typer CLI commands
+│   ├── api/
+│   │   ├── routers/            # FastAPI route handlers
+│   │   │   ├── auth.py         # OAuth & session endpoints
+│   │   │   ├── events.py       # Webhook events endpoints
+│   │   │   ├── health.py       # Health check endpoint
+│   │   │   ├── installations.py # GitHub App installations
+│   │   │   └── webhooks.py     # Webhook receiver
+│   │   ├── deps.py             # Dependency injection
+│   │   └── schemas.py          # Pydantic request/response models
+│   ├── db/
+│   │   ├── engine.py           # SQLModel engine & session
+│   │   └── models/             # SQLModel ORM models
+│   │       ├── user.py, session.py, event.py, installation.py, repository.py
+│   └── services/
+│       ├── auth.py             # OAuth/session logic
+│       ├── crypto.py           # HMAC, JWT, encryption
+│       └── github.py           # GitHub API client
+├── tests/
+│   ├── conftest.py             # Shared fixtures (client, session, user)
+│   ├── unit/                   # Fast isolated tests
+│   └── integration/            # API endpoint tests
+└── pyproject.toml              # Project config & dependencies
+```
+
+### Key Files
+
+- **Entry point:** `src/backend/app/main.py` → `create_app()`
+- **Config:** `src/backend/app/config.py` → `Settings` class (loads `.env`)
+- **Routes:** `src/backend/app/api/routers/*.py`
+- **Models:** `src/backend/app/db/models/*.py`
+- **Test fixtures:** `src/backend/tests/conftest.py`
+- **pyproject.toml:** `src/backend/pyproject.toml` (ruff, mypy, pytest, coverage config)
+
+---
+
+## Code Standards
+
+### Python Style
+
+- **Line length:** 88 chars (ruff/black)
+- **Imports:** isort with black profile, first-party package is `app`
+- **Type hints:** Required for all functions (strict mypy config exists but not enforced in CI)
+- **Docstrings:** Google style
+- **No print statements:** Use logging (enforced by ruff T20 rule)
 
 ### Test-Driven Development (TDD)
 
 When implementing features:
-
 1. **Red**: Write a failing test first
-1. **Green**: Write minimal code to pass the test
-1. **Refactor**: Improve structure while keeping tests green
+2. **Green**: Write minimal code to pass the test
+3. **Refactor**: Improve structure while keeping tests green
 
 Tests must be:
-
 - **Deterministic**: Fixed clocks, seeded randomness, hermetic fixtures
 - **Behavioral**: Test user-visible outcomes, not implementation details
 - **Layered**: Unit (many, fast) → Integration (some) → E2E (few, critical paths)
 
-______________________________________________________________________
+### Testing
 
-## Documentation Standards
+- **Framework:** pytest with async mode (`asyncio_mode = "auto"`)
+- **Markers:** `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.security`
+- **Fixtures:** Use `conftest.py` fixtures (`client`, `session`, `test_user`, `webhook_secret`)
 
-- Use Markdown for all documentation
-- Include Mermaid diagrams for architecture and flows
-- Keep docs co-located with code when possible
-- Update docs when behavior changes
+When adding code:
+1. Write test first (TDD: Red → Green → Refactor)
+2. Tests in `tests/unit/` for pure logic, `tests/integration/` for API endpoints
+3. Use existing fixtures from `conftest.py`
 
-______________________________________________________________________
+### Adding Dependencies
 
-## Agent Handoff Context
-
-When handing off to another agent, include:
-
-1. **What was done**: Summary of completed work
-1. **Current state**: What exists now
-1. **What's needed next**: Specific ask for the receiving agent
-1. **Open questions**: Unresolved issues to address
-
-______________________________________________________________________
-
-## Checkpoint Resume Protocol
-
-Agents save checkpoint files with a YAML frontmatter header for resumption. When a user asks to "resume" or "continue" work from a file or folder, follow this protocol:
-
-### Checkpoint File Format
-
-All checkpoint files include this frontmatter:
-
-```yaml
----
-checkpoint:
-  agent: <agent-name>           # Agent that created this checkpoint
-  stage: <lifecycle-stage>      # Requirements | Architecture | UI/UX | Implementation | Testing | Review | Release/Ops
-  status: <status>              # complete | in-progress | blocked
-  created: <ISO-date>
-  next_agents:                  # Recommended agents to continue with
-    - agent: <agent-name>
-      action: <what to do>
-    - agent: <agent-name>
-      action: <what to do>
----
+```bash
+make add pkg=<package>       # Add runtime dependency
+make add-dev pkg=<package>   # Add dev dependency
 ```
 
-### Resume Routing Rules
+---
 
-When user asks to resume from checkpoint files:
+## Issue Templates & Workflow
 
-1. **Read the checkpoint frontmatter** to identify the source agent and next agents
-2. **Check the status**:
-   - `complete` → Route to one of the `next_agents`
-   - `in-progress` → Continue with the same `agent`
-   - `blocked` → Show the blocker and ask user for resolution
-3. **Invoke the appropriate agent** with context from the checkpoint files
+When generating GitHub Issues, use templates in `.github/ISSUE_TEMPLATE/`:
 
-### Checkpoint Location Mapping
+| Template | Use When |
+|----------|----------|
+| `01-feature-request.yml` | Proposing new features |
+| `02-user-story.yml` | Creating backlog stories |
+| `03-bug-report.yml` | Reporting bugs |
+| `04-architecture-decision.yml` | Documenting ADRs |
+| `05-technical-debt.yml` | Tracking tech debt |
+| `06-test-case-gap.yml` | Missing test coverage |
+| `07-release-request.yml` | Requesting releases |
+| `08-incident-report.yml` | Post-incident reviews |
 
-| Folder Pattern | Source Agent | Typical Next Agents |
-|----------------|--------------|---------------------|
-| `docs/requirements/<feature>/` | `requirements` | `story-builder`, `arch-spec-author` |
-| `docs/stories/<feature>/` | `story-builder` | `story-quality-gate`, `arch-spec-author` |
-| `docs/architecture/<feature>/` | `arch-spec-author` | `risk-and-nfr-gate`, `implementation-driver` |
-| `docs/ui/<feature>/` | `ui-scaffolder` | `a11y-guardian`, `test-drafter` |
-| `docs/testing/<feature>/` | `test-drafter` | `implementation-driver`, `test-truth-and-stability-gate` |
-| `docs/implementation/<feature>/` | `implementation-driver` | `code-reviewer`, `test-drafter` |
-| `docs/releases/<version>/` | `release-pipeline-author` | `prod-risk-and-rollback-gate`, `runbook-and-ops-docs` |
-| `docs/runbooks/<feature>/` | `runbook-and-ops-docs` | `incident-scribe` |
-| `docs/incidents/<incident-id>/` | `incident-scribe` | `story-builder` |
+### Acceptance Criteria Format
 
-### Example Resume Flow
+Use **Given/When/Then** (Gherkin) format. Always include edge cases:
+- Empty/null/missing data states
+- Permission/authorization failures
+- Validation failures
+- Network/timeout errors
 
-**User says:** "Resume work from `docs/requirements/user-auth/`"
+---
 
-**Copilot should:**
-1. Read `docs/requirements/user-auth/one-pager.md`
-2. Parse the checkpoint frontmatter
-3. If status is `complete`, offer: "The requirements are complete. Would you like me to invoke `@story-builder` to create user stories, or `@arch-spec-author` to design the architecture?"
-4. If status is `in-progress`, invoke `@requirements` to continue
+## Configuration
 
-______________________________________________________________________
+### Environment Variables
 
-## References
+App reads from `.env` file or environment. Key settings:
 
-- Lifecycle docs: `docs/best_practices/web-dev-lifecycle/`
-- Agent definitions: `.github/agents/`
-- Issue templates: `.github/ISSUE_TEMPLATE/`
-- Skills: `.github/skills/`
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GITHUB_APP_ID` | "" | GitHub App ID |
+| `GITHUB_CLIENT_ID` | "" | OAuth Client ID |
+| `GITHUB_CLIENT_SECRET` | "" | OAuth Client Secret |
+| `GITHUB_WEBHOOK_SECRET` | "" | Webhook HMAC secret |
+| `DATABASE_URL` | `sqlite:///./orchestrator.db` | Database connection |
+| `DEBUG` | `false` | Enable debug mode |
+
+### Linting Configuration
+
+All in `src/backend/pyproject.toml`:
+- **ruff:** Select E, W, F, I, B, C4, UP, S, T20; ignore E501, B008
+- **isort:** Black profile, first-party = `app`
+- **mypy:** Strict mode (not enforced), Python 3.12 target
+
+---
+
+## Documentation & Resources
+
+- **Issue templates:** `.github/ISSUE_TEMPLATE/*.yml`
+- **Agents:** `.github/agents/*.agent.md`
+- **Architecture docs:** `docs/architecture/`
+- **Best practices:** `docs/best_practices/`
+
+---
+
+## Quick Reference
+
+```bash
+# Full dev setup (first time)
+make install-dev && make pre-commit-install
+
+# Daily workflow
+make test                 # Run all tests
+make lint && make format  # Fix code style
+make run                  # Start server at localhost:8000
+
+# Before committing
+make test && make lint && make format-check
+
+# Adding new endpoint
+# 1. Add route in src/backend/app/api/routers/
+# 2. Add schemas in src/backend/app/api/schemas.py
+# 3. Add tests in src/backend/tests/integration/
+# 4. Run: make test && make lint
+```
