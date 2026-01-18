@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     github_private_key: str = Field(
         default="", description="GitHub App Private Key (PEM format)"
     )
+    github_app_slug: str = Field(
+        default="copilot-workflow-orchestrator",
+        description="GitHub App slug for installation URL",
+    )
 
     # Session
     session_secret_key: str = Field(

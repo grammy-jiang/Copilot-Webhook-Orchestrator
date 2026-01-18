@@ -27,7 +27,6 @@ describe('EmptyState', () => {
 
 		const actionButton = screen.getByRole('button', { name: 'Connect Repository' });
 		expect(actionButton).toBeInTheDocument();
-		expect(actionButton).toHaveAttribute('href', '/repositories/connect');
 	});
 
 	it('does not render action button when actionLabel is not provided', () => {

@@ -10,6 +10,12 @@
 	}
 
 	let { title, description, actionLabel, actionHref }: Props = $props();
+
+	function handleAction() {
+		if (actionHref) {
+			window.location.href = actionHref;
+		}
+	}
 </script>
 
 <Empty.Root class="flex-1" data-testid="empty-state">
@@ -36,7 +42,7 @@
 	</Empty.Header>
 	{#if actionLabel && actionHref}
 		<Empty.Content>
-			<Button href={actionHref}>{actionLabel}</Button>
+			<Button onclick={handleAction}>{actionLabel}</Button>
 		</Empty.Content>
 	{/if}
 </Empty.Root>

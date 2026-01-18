@@ -25,7 +25,7 @@
 						title="No repositories connected"
 						description="Install the GitHub App to start monitoring your Copilot workflows."
 						actionLabel="Import Repository"
-						actionHref="/api/installations/callback"
+						actionHref="/api/installations/connect"
 					/>
 				{/if}
 			</div>

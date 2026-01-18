@@ -3,15 +3,46 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
 from app.api.deps import get_current_user
 from app.api.schemas import InstallationListResponse, InstallationResponse
+from app.config import get_settings
 from app.db.engine import get_session
 from app.db.models.user import User
 from app.services.github import GitHubService
 
 router = APIRouter(prefix="/installations", tags=["installations"])
+
+
+@router.get("/connect")
+async def connect_installation(
+    current_user: Annotated[User | None, Depends(get_current_user)] = None,
+) -> RedirectResponse:
+    """Redirect to GitHub App installation page.
+
+    Args:
+        current_user: The authenticated user.
+
+    Returns:
+        Redirect to GitHub App installation page.
+
+    Raises:
+        HTTPException: If user is not authenticated.
+    """
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Must be authenticated to install the GitHub App",
+        )
+
+    settings = get_settings()
+    github_app_url = (
+        f"https://github.com/apps/{settings.github_app_slug}/installations/new"
+    )
+
+    return RedirectResponse(url=github_app_url, status_code=status.HTTP_302_FOUND)
 
 
 @router.get("", response_model=InstallationListResponse)

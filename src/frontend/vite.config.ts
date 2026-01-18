@@ -16,6 +16,7 @@ export default defineConfig({
 		environment: 'jsdom',
 		globals: true,
 		setupFiles: ['./vitest.setup.ts'],
+		pool: 'forks',
 		// Ensure we use browser build of Svelte, not server
 		alias: [{ find: /^svelte$/, replacement: 'svelte' }],
 		// Required for Svelte 5 component testing
