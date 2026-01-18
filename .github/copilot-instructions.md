@@ -48,8 +48,7 @@ This repository contains multiple custom agents in `.github/agents/` for differe
 
 ## Build & Validation Commands
 
-**Backend commands run from repository root.** Use the Makefile; do not run uv/pytest directly.
-**Frontend commands run from `src/frontend/`.** Use pnpm.
+**All commands run from repository root.** Use the Makefile; do not run uv/pytest/pnpm directly.
 
 ### Required Setup (run once)
 
@@ -61,9 +60,8 @@ make pre-commit-install # Install pre-commit hooks
 
 **Frontend:**
 ```bash
-cd src/frontend
-pnpm install            # Install all dependencies
-npx playwright install  # Install browser binaries for E2E tests
+make frontend-install           # Install all dependencies
+make frontend-install-browsers  # Install browser binaries for E2E tests
 ```
 
 ### Development Workflow
@@ -82,17 +80,18 @@ npx playwright install  # Install browser binaries for E2E tests
 | **Format + lint fix** | `make fix` |
 | **Run dev server** | `make run` |
 
-**Frontend (from `src/frontend/`):**
+**Frontend (from repo root):**
 
 | Task | Command |
-|------|---------|
-| **Start dev server** | `pnpm dev` |
-| **Run unit tests** | `pnpm test` |
-| **Run E2E tests** | `pnpm test:e2e` |
-| **Type check** | `pnpm check` |
-| **Lint code** | `pnpm lint` |
-| **Format code** | `pnpm format` |
-| **Build for production** | `pnpm build` |
+|------|---------||
+| **Start dev server** | `make frontend-dev` |
+| **Run unit tests** | `make frontend-test` |
+| **Run E2E tests** | `make frontend-test-e2e` |
+| **Run all tests** | `make frontend-test-all` |
+| **Type check** | `make frontend-check` |
+| **Lint code** | `make frontend-lint` |
+| **Format code** | `make frontend-format` |
+| **Build for production** | `make frontend-build` |
 
 ### Validation Before Committing
 
@@ -107,11 +106,10 @@ make format-check # Must show "files already formatted"
 
 **Frontend:**
 ```bash
-cd src/frontend
-pnpm check        # TypeScript type checking
-pnpm lint         # ESLint checks
-pnpm test         # Unit/component tests
-pnpm test:e2e     # E2E tests (if UI changes)
+make frontend-check     # TypeScript type checking
+make frontend-lint      # ESLint checks
+make frontend-test      # Unit/component tests
+make frontend-test-e2e  # E2E tests (if UI changes)
 ```
 
 ### Coverage Requirements
@@ -123,7 +121,7 @@ pnpm test:e2e     # E2E tests (if UI changes)
 
 **Frontend:**
 - **Components** (`src/lib/components/`): minimum **80%** coverage
-- Run `pnpm test --coverage` to verify coverage.
+- Run `make frontend-test-cov` to verify coverage.
 
 ---
 
@@ -254,10 +252,10 @@ make add pkg=<package>       # Add runtime dependency
 make add-dev pkg=<package>   # Add dev dependency
 ```
 
-**Frontend (from `src/frontend/`):**
+**Frontend (from repo root):**
 ```bash
-pnpm add <package>           # Add runtime dependency
-pnpm add -D <package>        # Add dev dependency
+make frontend-add pkg=<package>       # Add runtime dependency
+make frontend-add-dev pkg=<package>   # Add dev dependency
 ```
 
 ---
@@ -325,7 +323,7 @@ All in `src/backend/pyproject.toml`:
 ```bash
 # Full dev setup (first time)
 make install-dev && make pre-commit-install
-cd src/frontend && pnpm install && npx playwright install
+make frontend-install && make frontend-install-browsers
 
 # Daily workflow - Backend
 make test                 # Run all tests
@@ -333,16 +331,15 @@ make lint && make format  # Fix code style
 make run                  # Start server at localhost:8000
 
 # Daily workflow - Frontend
-cd src/frontend
-pnpm dev                  # Start dev server at localhost:5173
-pnpm test                 # Run unit tests
-pnpm check && pnpm lint   # Type check and lint
+make frontend-dev         # Start dev server at localhost:5173
+make frontend-test        # Run unit tests
+make frontend-check && make frontend-lint  # Type check and lint
 
 # Before committing - Backend
 make test && make lint && make format-check
 
 # Before committing - Frontend
-cd src/frontend && pnpm check && pnpm lint && pnpm test
+make frontend-check && make frontend-lint && make frontend-test
 
 # Adding new backend endpoint
 # 1. Add route in src/backend/app/api/routers/
@@ -353,5 +350,5 @@ cd src/frontend && pnpm check && pnpm lint && pnpm test
 # Adding new frontend component
 # 1. Add component in src/frontend/src/lib/components/
 # 2. Add tests in src/frontend/src/lib/components/__tests__/
-# 3. Run: cd src/frontend && pnpm test && pnpm check
+# 3. Run: make frontend-test && make frontend-check
 ```

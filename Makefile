@@ -185,6 +185,12 @@ frontend-lint: ## Lint frontend code
 frontend-format: ## Format frontend code
 	cd $(FRONTEND_DIR) && pnpm format
 
+frontend-format-check: ## Check if frontend code is formatted
+	cd $(FRONTEND_DIR) && pnpm lint
+
+frontend-test-cov: ## Run frontend tests with coverage
+	cd $(FRONTEND_DIR) && pnpm test -- --coverage
+
 frontend-clean: ## Clean frontend build artifacts
 	cd $(FRONTEND_DIR) && rm -rf .svelte-kit build node_modules/.vite
 

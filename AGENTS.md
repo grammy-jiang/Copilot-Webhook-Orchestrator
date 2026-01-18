@@ -42,11 +42,11 @@ make lint         # Must show "All checks passed!"
 make format-check # Must show "files already formatted"
 ```
 
-**Frontend (SvelteKit):** Run from `src/frontend/`:
+**Frontend (SvelteKit):**
 ```bash
-pnpm check        # TypeScript type checking
-pnpm lint         # ESLint checks
-pnpm test         # Unit/component tests
+make frontend-check   # TypeScript type checking
+make frontend-lint    # ESLint checks
+make frontend-test    # Unit/component tests
 ```
 
 If any step fails: fix it, or explain precisely what blocks you (including error output).
@@ -116,16 +116,16 @@ Navigate to component-specific `AGENTS.md` for detailed guidance.
 # Backend setup (from repo root)
 make install-dev && make pre-commit-install
 
-# Frontend setup (from src/frontend/)
-pnpm install && npx playwright install
+# Frontend setup (from repo root)
+make frontend-install && make frontend-install-browsers
 
 # Backend validation
 make test && make lint && make format-check
 
 # Frontend validation
-cd src/frontend && pnpm check && pnpm lint && pnpm test
+make frontend-check && make frontend-lint && make frontend-test
 
 # Run dev servers
 make run                    # Backend at localhost:8000
-cd src/frontend && pnpm dev # Frontend at localhost:5173
+make frontend-dev           # Frontend at localhost:5173
 ```

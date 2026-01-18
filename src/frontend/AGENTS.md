@@ -29,39 +29,39 @@
 
 ## Build & Validation Commands
 
-**All commands run from `src/frontend/` directory.**
+**All commands run from repository root.** Use the Makefile; do not run pnpm directly.
 
 ### Required Setup (run once)
 
 ```bash
-pnpm install              # Install all dependencies
-npx playwright install    # Install browser binaries for E2E tests
+make frontend-install           # Install all dependencies
+make frontend-install-browsers  # Install browser binaries for E2E tests
 ```
 
 ### Development Workflow
 
-| Task                     | Command         |
-| ------------------------ | --------------- |
-| **Start dev server**     | `pnpm dev`      |
-| **Run unit tests**       | `pnpm test`     |
-| **Run tests with UI**    | `pnpm test:ui`  |
-| **Run E2E tests**        | `pnpm test:e2e` |
-| **Run all tests**        | `pnpm test:all` |
-| **Type check**           | `pnpm check`    |
-| **Lint code**            | `pnpm lint`     |
-| **Format code**          | `pnpm format`   |
-| **Build for production** | `pnpm build`    |
-| **Preview production**   | `pnpm preview`  |
+| Task                     | Command                  |
+| ------------------------ | ------------------------ |
+| **Start dev server**     | `make frontend-dev`      |
+| **Run unit tests**       | `make frontend-test`     |
+| **Run tests with UI**    | `make frontend-test-ui`  |
+| **Run E2E tests**        | `make frontend-test-e2e` |
+| **Run all tests**        | `make frontend-test-all` |
+| **Type check**           | `make frontend-check`    |
+| **Lint code**            | `make frontend-lint`     |
+| **Format code**          | `make frontend-format`   |
+| **Build for production** | `make frontend-build`    |
+| **Preview production**   | `make frontend-preview`  |
 
 ### Validation Before Committing
 
 **ALWAYS run these before declaring work complete:**
 
 ```bash
-pnpm check       # TypeScript type checking
-pnpm lint        # ESLint checks
-pnpm test        # Unit/component tests
-pnpm test:e2e    # E2E tests (if UI changes)
+make frontend-check      # TypeScript type checking
+make frontend-lint       # ESLint checks
+make frontend-test       # Unit/component tests
+make frontend-test-e2e   # E2E tests (if UI changes)
 ```
 
 ---
@@ -241,13 +241,13 @@ See backend API schemas in `../backend/app/api/schemas.py`.
 - **Target coverage**: 80%+ for components
 - **Location**: `src/lib/components/__tests__/`
 - **Naming**: `ComponentName.test.ts`
-- **Run**: `pnpm test`
+- **Run**: `make frontend-test`
 
 ### E2E Tests (Playwright)
 
 - **Location**: `tests/e2e/`
 - **Naming**: `feature.spec.ts`
-- **Run**: `pnpm test:e2e`
+- **Run**: `make frontend-test-e2e`
 - **Critical paths**:
     - Login → Dashboard flow
     - Dashboard → Repository detail
