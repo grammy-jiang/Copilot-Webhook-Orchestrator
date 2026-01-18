@@ -88,7 +88,12 @@
 					</span>
 				</div>
 				<p class="mt-1 text-muted-foreground">
-					{event.repository_name}
+					<a
+						href="/repositories/{event.repository_id}"
+						class="hover:text-foreground hover:underline"
+					>
+						{event.repository_name}
+					</a>
 					{#if event.actor}
 						• by @{event.actor}
 					{/if}

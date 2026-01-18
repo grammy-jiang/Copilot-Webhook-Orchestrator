@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { tabUntilFocused } from './test-utils';
 
 /**
  * Login E2E Tests
@@ -121,14 +122,10 @@ test.describe('Login Page Accessibility', () => {
 		const loginButton = page.getByRole('button', { name: /login with github/i });
 
 		// Press Tab multiple times to reach the button (may need to pass skip links, nav items)
-		for (let i = 0; i < 10; i++) {
-			await page.keyboard.press('Tab');
-			if (await loginButton.evaluate((el) => document.activeElement === el)) {
-				break;
-			}
-		}
+		const focused = await tabUntilFocused(page, loginButton);
 
 		// Assert - Login button is focused
+		expect(focused).toBe(true);
 		await expect(loginButton).toBeFocused();
 	});
 

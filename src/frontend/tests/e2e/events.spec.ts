@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { QUICK_TAB_PRESSES } from './test-utils';
 
 /**
  * Events E2E Tests
@@ -611,7 +612,7 @@ test.describe('Events Accessibility', () => {
 		await expect(page.locator('[data-testid="event-card"]').first()).toBeVisible();
 
 		// Tab through interactive elements - multiple tabs to get into main content
-		for (let i = 0; i < 5; i++) {
+		for (let i = 0; i < QUICK_TAB_PRESSES; i++) {
 			await page.keyboard.press('Tab');
 		}
 

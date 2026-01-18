@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { tabUntilAnyFocused } from './test-utils';
 
 /**
  * Dashboard E2E Tests
@@ -265,12 +266,7 @@ test.describe('Dashboard Accessibility', () => {
 	 */
 	test('should be navigable with keyboard', async ({ page }) => {
 		// Tab through interactive elements until something is focused
-		for (let i = 0; i < 5; i++) {
-			await page.keyboard.press('Tab');
-			await page.waitForTimeout(50);
-			const count = await page.locator(':focus').count();
-			if (count > 0) break;
-		}
+		await tabUntilAnyFocused(page);
 
 		// Assert - At least one interactive element can receive focus
 		await expect(page.locator(':focus')).not.toHaveCount(0);
