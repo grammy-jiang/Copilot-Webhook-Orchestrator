@@ -9,7 +9,9 @@
 
 	// Calculate health status based on updated_at time (since we don't have last_event_at)
 	function getHealthStatus(): HealthStatus {
+		if (!repository.updated_at) return 'healthy'; // No activity data, assume healthy
 		const lastUpdate = new Date(repository.updated_at);
+		if (isNaN(lastUpdate.getTime())) return 'healthy'; // Invalid date, assume healthy
 		const now = new Date();
 		const hoursSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
 
@@ -18,11 +20,14 @@
 		return 'error';
 	}
 
-	function formatTimeAgo(dateString: string): string {
+	function formatTimeAgo(dateString: string | null | undefined): string {
+		if (!dateString) return 'No activity';
 		const date = new Date(dateString);
+		if (isNaN(date.getTime())) return 'No activity';
 		const now = new Date();
 		const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
+		if (seconds < 0) return 'Just now'; // Future date edge case
 		if (seconds < 60) return 'Just now';
 		if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
 		if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;

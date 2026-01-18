@@ -1,5 +1,6 @@
 """Installations router for GitHub App installation management."""
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -7,11 +8,19 @@ from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
 from app.api.deps import get_current_user
-from app.api.schemas import InstallationListResponse, InstallationResponse
+from app.api.schemas import (
+    InstallationListResponse,
+    InstallationResponse,
+    RepositoryListResponse,
+    RepositoryResponse,
+)
 from app.config import get_settings
 from app.db.engine import get_session
 from app.db.models.user import User
 from app.services.github import GitHubService
+from app.services.github_api import GitHubAPIClient, GitHubAPIError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/installations", tags=["installations"])
 
@@ -76,6 +85,97 @@ async def list_installations(
         return InstallationListResponse(installations=installations, total=1)
 
     return InstallationListResponse(installations=[], total=0)
+
+
+@router.get("/repositories", response_model=RepositoryListResponse)
+async def list_repositories(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_session)],
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    per_page: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 12,
+    search: Annotated[str | None, Query(description="Search filter")] = None,
+) -> RepositoryListResponse:
+    """List repositories accessible to the current user.
+
+    Fetches repositories from GitHub API using the user's installation.
+
+    Args:
+        current_user: The authenticated user.
+        db: The database session.
+        page: Page number (1-indexed).
+        per_page: Number of items per page.
+        search: Optional search filter for repository name.
+
+    Returns:
+        Paginated list of repositories.
+
+    Raises:
+        HTTPException: If no installation found or GitHub API error.
+    """
+    github_service = GitHubService(db)
+    installation = github_service.get_user_installation(current_user.id)
+
+    if not installation:
+        return RepositoryListResponse(
+            items=[],
+            total=0,
+            page=page,
+            per_page=per_page,
+            pages=1,
+        )
+
+    settings = get_settings()
+    api_client = GitHubAPIClient(settings)
+
+    try:
+        result = await api_client.list_installation_repositories(
+            installation_id=installation.github_installation_id,
+            page=page,
+            per_page=per_page,
+        )
+    except GitHubAPIError as e:
+        logger.error("GitHub API error: %s", e)
+        raise HTTPException(
+            status_code=e.status_code or status.HTTP_502_BAD_GATEWAY,
+            detail=str(e),
+        ) from e
+
+    repositories = result.get("repositories", [])
+    total = result.get("total_count", 0)
+
+    # Apply client-side search filter if provided
+    if search:
+        search_lower = search.lower()
+        repositories = [
+            repo for repo in repositories
+            if search_lower in repo.get("full_name", "").lower()
+        ]
+        total = len(repositories)
+
+    # Calculate total pages
+    pages = (total + per_page - 1) // per_page if total > 0 else 1
+
+    return RepositoryListResponse(
+        items=[
+            RepositoryResponse(
+                id=repo.get("id"),
+                github_repo_id=repo.get("id"),
+                installation_id=installation.id,
+                full_name=repo.get("full_name", ""),
+                owner=repo.get("owner", {}).get("login", ""),
+                name=repo.get("name", ""),
+                private=repo.get("private", False),
+                default_branch=repo.get("default_branch", "main"),
+                created_at=repo.get("created_at"),
+                updated_at=repo.get("pushed_at") or repo.get("updated_at"),
+            )
+            for repo in repositories
+        ],
+        total=total,
+        page=page,
+        per_page=per_page,
+        pages=pages,
+    )
 
 
 @router.get("/callback")

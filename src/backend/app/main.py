@@ -9,6 +9,7 @@ from app.api.routers import (
     events_router,
     health_router,
     installations_router,
+    repositories_router,
     webhooks_router,
 )
 from app.config import get_settings
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api")
     app.include_router(webhooks_router, prefix="/api")
     app.include_router(installations_router, prefix="/api")
+    app.include_router(repositories_router, prefix="/api")
     app.include_router(events_router, prefix="/api")
 
     @app.on_event("startup")

@@ -24,7 +24,8 @@ class AuthStore {
 				const data = await response.json();
 				// Backend returns UserResponse directly, not wrapped in { user, installation }
 				this.user = data;
-				this.installation = null; // TODO: Fetch installation separately if needed
+				// Fetch installation data
+				await this.fetchInstallation();
 			} else if (response.status === 401) {
 				this.user = null;
 				this.installation = null;
@@ -37,6 +38,25 @@ class AuthStore {
 			this.installation = null;
 		} finally {
 			this.isLoading = false;
+		}
+	}
+
+	async fetchInstallation(): Promise<void> {
+		try {
+			const response = await fetch('/api/installations');
+			if (response.ok) {
+				const data = await response.json();
+				// Get the first active installation
+				if (data.installations && data.installations.length > 0) {
+					this.installation = data.installations[0];
+				} else {
+					this.installation = null;
+				}
+			} else {
+				this.installation = null;
+			}
+		} catch {
+			this.installation = null;
 		}
 	}
 

@@ -165,6 +165,55 @@ class GitHubService:
 
     # Repository methods
 
+    def get_repositories_for_user(
+        self,
+        user_id: int,
+        page: int = 1,
+        per_page: int = 12,
+        search: str | None = None,
+    ) -> tuple[list[Repository], int]:
+        """Get repositories accessible to a user via their installation.
+
+        Args:
+            user_id: The user ID.
+            page: Page number (1-indexed).
+            per_page: Number of items per page.
+            search: Optional search filter for repository name.
+
+        Returns:
+            Tuple of (list of repositories, total count).
+        """
+        # Get user's installation
+        installation = self.get_user_installation(user_id)
+        if not installation:
+            return [], 0
+
+        # Build query
+        statement = select(Repository).where(
+            Repository.installation_id == installation.id
+        )
+
+        # Apply search filter if provided
+        if search:
+            statement = statement.where(Repository.full_name.ilike(f"%{search}%"))
+
+        # Get total count
+        count_statement = select(Repository).where(
+            Repository.installation_id == installation.id
+        )
+        if search:
+            count_statement = count_statement.where(
+                Repository.full_name.ilike(f"%{search}%")
+            )
+        total = len(list(self.db.exec(count_statement)))
+
+        # Apply pagination
+        offset = (page - 1) * per_page
+        statement = statement.offset(offset).limit(per_page)
+
+        repositories = list(self.db.exec(statement))
+        return repositories, total
+
     def get_repository_by_github_id(self, github_repo_id: int) -> Repository | None:
         """Get a repository by its GitHub ID.
 

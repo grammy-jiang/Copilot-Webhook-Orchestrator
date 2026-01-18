@@ -62,6 +62,32 @@ class InstallationListResponse(BaseModel):
     total: int
 
 
+# Repository schemas
+class RepositoryResponse(BaseModel):
+    """Repository response schema."""
+
+    id: int
+    github_repo_id: int
+    installation_id: int
+    full_name: str
+    owner: str
+    name: str
+    private: bool
+    default_branch: str
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class RepositoryListResponse(BaseModel):
+    """Paginated list of repositories response."""
+
+    items: list[RepositoryResponse]
+    total: int
+    page: int
+    per_page: int
+    pages: int
+
+
 # Event schemas
 class EventResponse(BaseModel):
     """Event response schema."""

@@ -1,5 +1,6 @@
 """Authentication router for OAuth and session management."""
 
+import logging
 import secrets
 from typing import Annotated
 
@@ -7,12 +8,16 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request, s
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
 
-from app.api.deps import get_auth_service, get_current_user
+from app.api.deps import get_auth_service, get_current_user, get_optional_user
 from app.api.schemas import UserResponse
 from app.config import get_settings
 from app.db.engine import get_session
 from app.db.models.user import User
 from app.services.auth import AuthService
+from app.services.github import GitHubService
+from app.services.github_api import GitHubAPIClient, GitHubAPIError
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -46,23 +51,64 @@ async def login(
 @router.get("/callback")
 async def oauth_callback(
     request: Request,
-    code: Annotated[str, Query(description="GitHub OAuth authorization code")],
-    state: Annotated[str, Query(description="OAuth state parameter")],
     db: Annotated[Session, Depends(get_session)],
     auth_service: Annotated[AuthService, Depends(get_auth_service)],
+    existing_user: Annotated[User | None, Depends(get_optional_user)],
+    code: Annotated[str | None, Query(description="GitHub OAuth authorization code")] = None,
+    state: Annotated[str | None, Query(description="OAuth state parameter")] = None,
+    installation_id: Annotated[
+        int | None, Query(description="GitHub App installation ID")
+    ] = None,
+    setup_action: Annotated[
+        str | None, Query(description="GitHub App setup action")
+    ] = None,
 ) -> RedirectResponse:
-    """Handle GitHub OAuth callback.
+    """Handle GitHub OAuth callback and GitHub App installation callback.
+
+    This endpoint handles two different flows:
+    1. OAuth login: Called with `code` and `state` parameters
+    2. GitHub App installation: Called with `code`, `installation_id`, and `setup_action`
+
+    For installation callbacks, if the user is already authenticated (has a valid session),
+    we redirect directly to the repositories page without re-authenticating.
 
     Args:
         request: The incoming request.
-        code: The authorization code from GitHub.
-        state: The state parameter for CSRF validation.
         db: The database session.
         auth_service: The auth service.
+        existing_user: The currently authenticated user, if any.
+        code: The authorization code from GitHub.
+        state: The state parameter for CSRF validation (OAuth login flow).
+        installation_id: GitHub App installation ID (installation flow).
+        setup_action: Setup action type (installation flow).
 
     Returns:
         Redirect to the frontend with session cookie set.
     """
+    settings = get_settings()
+
+    # Determine which flow this is
+    is_installation_flow = installation_id is not None
+
+    # For installation callbacks, if user already has a valid session, create installation and redirect
+    if is_installation_flow and existing_user is not None:
+        # Create or update the installation record
+        await _create_or_update_installation(
+            db=db,
+            user=existing_user,
+            installation_id=installation_id,
+        )
+        return RedirectResponse(
+            url=f"{settings.frontend_url}/repositories",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+    # If no code provided (shouldn't happen, but handle gracefully)
+    if not code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No authorization code provided",
+        )
     # Exchange code for access token
     access_token = await auth_service.exchange_code_for_token(code)
     if not access_token:
@@ -100,9 +146,21 @@ async def oauth_callback(
 
     # Redirect to frontend with session cookie
     settings = get_settings()
-    response = RedirectResponse(
-        url=settings.frontend_url, status_code=status.HTTP_302_FOUND
-    )
+
+    # Determine redirect URL based on flow type
+    if is_installation_flow:
+        # For GitHub App installation, create installation record and redirect to repositories page
+        await _create_or_update_installation(
+            db=db,
+            user=user,
+            installation_id=installation_id,
+        )
+        redirect_url = f"{settings.frontend_url}/repositories"
+    else:
+        # For regular OAuth login, redirect to frontend home
+        redirect_url = settings.frontend_url
+
+    response = RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
     response.set_cookie(
         key="session_token",
         value=token,
@@ -169,3 +227,53 @@ async def logout(
         samesite="lax",
     )
     return response
+
+
+async def _create_or_update_installation(
+    db: Session,
+    user: User,
+    installation_id: int,
+) -> None:
+    """Create or update an installation record from GitHub API.
+
+    Fetches installation details from GitHub and creates/updates
+    the local installation record.
+
+    Args:
+        db: The database session.
+        user: The user who owns the installation.
+        installation_id: The GitHub installation ID.
+    """
+    settings = get_settings()
+    github_service = GitHubService(db)
+    api_client = GitHubAPIClient(settings)
+
+    # Check if installation already exists
+    existing = github_service.get_installation_by_github_id(installation_id)
+    if existing:
+        # Installation already exists, no need to create
+        logger.info("Installation %s already exists for user %s", installation_id, user.id)
+        return
+
+    try:
+        # Fetch installation details from GitHub
+        installation_data = await api_client.get_installation(installation_id)
+
+        # Create the installation record
+        github_service.create_installation(
+            user=user,
+            github_installation_id=installation_id,
+            account_type=installation_data.get("account", {}).get("type", "User"),
+            account_login=installation_data.get("account", {}).get("login", ""),
+            account_id=installation_data.get("account", {}).get("id", 0),
+            target_type=installation_data.get("repository_selection", "all"),
+            permissions=installation_data.get("permissions", {}),
+            events=installation_data.get("events", []),
+        )
+        logger.info(
+            "Created installation %s for user %s",
+            installation_id,
+            user.id,
+        )
+    except GitHubAPIError as e:
+        logger.error("Failed to fetch installation %s: %s", installation_id, e)

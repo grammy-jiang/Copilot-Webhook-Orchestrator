@@ -164,3 +164,25 @@ def decrypt_token(encrypted_token: str, key: bytes) -> str:
     """
     f = Fernet(key)
     return f.decrypt(encrypted_token.encode()).decode()
+
+
+def generate_github_app_jwt(app_id: str, private_key: str) -> str:
+    """Generate a JWT for GitHub App authentication.
+
+    GitHub Apps use RS256 signed JWTs to authenticate and obtain
+    installation access tokens.
+
+    Args:
+        app_id: The GitHub App ID.
+        private_key: The GitHub App private key in PEM format.
+
+    Returns:
+        The encoded JWT string valid for 10 minutes.
+    """
+    now = datetime.now(UTC)
+    claims = {
+        "iat": int(now.timestamp()) - 60,  # Issued 60 seconds ago to handle clock drift
+        "exp": int((now + timedelta(minutes=10)).timestamp()),
+        "iss": app_id,
+    }
+    return jwt.encode(claims, private_key, algorithm="RS256")

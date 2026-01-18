@@ -32,17 +32,22 @@
 		try {
 			const [repoResponse, eventsResponse] = await Promise.all([
 				fetch(`/api/repositories/${repositoryId}`),
-				fetch(`/api/repositories/${repositoryId}/events?per_page=20`)
+				fetch(`/api/repositories/${repositoryId}/events?limit=20&offset=0`)
 			]);
 
 			if (!repoResponse.ok) throw new Error('Repository not found');
 			if (!eventsResponse.ok) throw new Error('Failed to load events');
 
 			repository = await repoResponse.json();
-			const eventsData: PaginatedResponse<Event> = await eventsResponse.json();
-			events = eventsData.items;
-			currentPage = eventsData.page;
-			totalPages = eventsData.pages;
+			const eventsData = await eventsResponse.json();
+			// Handle both formats: events[] (backend) or items[] (generic paginated)
+			events = eventsData.events || eventsData.items || [];
+			// Calculate page info from limit/offset
+			const limit = eventsData.limit || 20;
+			const offset = eventsData.offset || 0;
+			const total = eventsData.total || 0;
+			currentPage = Math.floor(offset / limit) + 1;
+			totalPages = Math.ceil(total / limit) || 1;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'An error occurred';
 		} finally {
@@ -52,15 +57,18 @@
 
 	async function loadEvents(eventPage = 1) {
 		try {
+			const limit = 20;
+			const offset = (eventPage - 1) * limit;
 			const response = await fetch(
-				`/api/repositories/${repositoryId}/events?page=${eventPage}&per_page=20`
+				`/api/repositories/${repositoryId}/events?limit=${limit}&offset=${offset}`
 			);
 			if (!response.ok) throw new Error('Failed to load events');
 
-			const data: PaginatedResponse<Event> = await response.json();
-			events = data.items;
-			currentPage = data.page;
-			totalPages = data.pages;
+			const data = await response.json();
+			events = data.events || data.items || [];
+			const total = data.total || 0;
+			currentPage = Math.floor(offset / limit) + 1;
+			totalPages = Math.ceil(total / limit) || 1;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'An error occurred';
 		}
