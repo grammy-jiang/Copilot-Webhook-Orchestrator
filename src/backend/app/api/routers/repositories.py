@@ -75,6 +75,10 @@ async def get_repository(
     # Find the repository with matching ID
     for repo in repositories:
         if repo.get("id") == repository_id:
+            # Get last event time for this repository
+            last_event_map = github_service.get_last_event_at_for_repositories(
+                [repository_id]
+            )
             return RepositoryResponse(
                 id=repo.get("id"),
                 github_repo_id=repo.get("id"),
@@ -86,6 +90,7 @@ async def get_repository(
                 default_branch=repo.get("default_branch", "main"),
                 created_at=repo.get("created_at"),
                 updated_at=repo.get("pushed_at") or repo.get("updated_at"),
+                last_event_at=last_event_map.get(repository_id),
             )
 
     raise HTTPException(

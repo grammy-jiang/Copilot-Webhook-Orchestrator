@@ -76,6 +76,7 @@ class RepositoryResponse(BaseModel):
     default_branch: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
+    last_event_at: datetime | None = None
 
 
 class RepositoryListResponse(BaseModel):

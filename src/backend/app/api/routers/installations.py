@@ -155,6 +155,10 @@ async def list_repositories(
     # Calculate total pages
     pages = (total + per_page - 1) // per_page if total > 0 else 1
 
+    # Get last event timestamps for all repositories
+    repo_ids = [repo.get("id") for repo in repositories if repo.get("id")]
+    last_event_map = github_service.get_last_event_at_for_repositories(repo_ids)
+
     return RepositoryListResponse(
         items=[
             RepositoryResponse(
@@ -168,6 +172,7 @@ async def list_repositories(
                 default_branch=repo.get("default_branch", "main"),
                 created_at=repo.get("created_at"),
                 updated_at=repo.get("pushed_at") or repo.get("updated_at"),
+                last_event_at=last_event_map.get(repo.get("id")),
             )
             for repo in repositories
         ],

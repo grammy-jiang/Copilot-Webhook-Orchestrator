@@ -426,3 +426,48 @@ class GitHubService:
         self.db.commit()
         self.db.refresh(event)
         return event
+
+    def get_last_event_at_for_repositories(
+        self, repository_github_ids: list[int]
+    ) -> dict[int, datetime | None]:
+        """Get the last event timestamp for multiple repositories.
+
+        Args:
+            repository_github_ids: List of GitHub repository IDs.
+
+        Returns:
+            Dictionary mapping GitHub repo ID to last event timestamp.
+        """
+        result: dict[int, datetime | None] = dict.fromkeys(repository_github_ids)
+
+        if not repository_github_ids:
+            return result
+
+        # Get all repositories by GitHub IDs
+        repos_statement = select(Repository).where(
+            Repository.github_repo_id.in_(repository_github_ids)
+        )
+        repos = list(self.db.exec(repos_statement))
+
+        # Map internal ID to GitHub ID
+        internal_to_github: dict[int, int] = {}
+        for repo in repos:
+            if repo.id is not None:
+                internal_to_github[repo.id] = repo.github_repo_id
+
+        if not internal_to_github:
+            return result
+
+        # Get the most recent event for each repository
+        for internal_id, github_id in internal_to_github.items():
+            event_statement = (
+                select(Event)
+                .where(Event.repository_id == internal_id)
+                .order_by(desc(Event.created_at))
+                .limit(1)
+            )
+            event = self.db.exec(event_statement).first()
+            if event:
+                result[github_id] = event.created_at
+
+        return result

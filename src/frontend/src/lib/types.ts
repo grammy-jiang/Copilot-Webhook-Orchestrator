@@ -38,6 +38,7 @@ export interface Repository {
 	default_branch: string;
 	created_at: string;
 	updated_at: string;
+	last_event_at: string | null;
 }
 
 // Event type matching backend EventResponse schema

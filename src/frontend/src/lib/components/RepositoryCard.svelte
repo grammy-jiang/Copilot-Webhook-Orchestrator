@@ -7,23 +7,28 @@
 
 	let { repository }: Props = $props();
 
-	// Calculate health status based on updated_at time (since we don't have last_event_at)
+	// Calculate health status based on last webhook event received
+	// - healthy: received an event within the last 7 days
+	// - warning: no events received yet (waiting for first webhook)
+	// - error: last event was more than 7 days ago (stale)
 	function getHealthStatus(): HealthStatus {
-		if (!repository.updated_at) return 'healthy'; // No activity data, assume healthy
-		const lastUpdate = new Date(repository.updated_at);
-		if (isNaN(lastUpdate.getTime())) return 'healthy'; // Invalid date, assume healthy
+		if (!repository.last_event_at) {
+			// No events received yet - waiting state
+			return 'warning';
+		}
+		const lastEvent = new Date(repository.last_event_at);
+		if (isNaN(lastEvent.getTime())) return 'warning';
 		const now = new Date();
-		const hoursSinceUpdate = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60);
+		const daysSinceEvent = (now.getTime() - lastEvent.getTime()) / (1000 * 60 * 60 * 24);
 
-		if (hoursSinceUpdate < 1) return 'healthy';
-		if (hoursSinceUpdate < 24) return 'warning';
+		if (daysSinceEvent < 7) return 'healthy';
 		return 'error';
 	}
 
 	function formatTimeAgo(dateString: string | null | undefined): string {
-		if (!dateString) return 'No activity';
+		if (!dateString) return 'No events yet';
 		const date = new Date(dateString);
-		if (isNaN(date.getTime())) return 'No activity';
+		if (isNaN(date.getTime())) return 'No events yet';
 		const now = new Date();
 		const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -39,6 +44,11 @@
 		healthy: 'bg-green-500',
 		warning: 'bg-yellow-500',
 		error: 'bg-red-500'
+	};
+	const healthLabels = {
+		healthy: 'active',
+		warning: 'awaiting',
+		error: 'stale'
 	};
 </script>
 
@@ -70,7 +80,9 @@
 				<h3 class="truncate font-semibold text-card-foreground">{repository.full_name}</h3>
 				<div class="mt-1 flex items-center gap-2">
 					<span class="h-2 w-2 rounded-full {healthColors[healthStatus]}"></span>
-					<span class="text-xs capitalize text-muted-foreground">{healthStatus}</span>
+					<span class="text-xs capitalize text-muted-foreground"
+						>{healthLabels[healthStatus]}</span
+					>
 				</div>
 			</div>
 		</div>
@@ -129,7 +141,7 @@
 				<circle cx="12" cy="12" r="10" />
 				<polyline points="12 6 12 12 16 14" />
 			</svg>
-			<span>{formatTimeAgo(repository.updated_at)}</span>
+			<span>{formatTimeAgo(repository.last_event_at)}</span>
 		</div>
 	</div>
 </a>
