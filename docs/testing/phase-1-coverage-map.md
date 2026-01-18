@@ -208,48 +208,48 @@ ______________________________________________________________________
 
 | AC Scenario                     | Test Layer   | Test ID                       | Status   |
 | ------------------------------- | ------------ | ----------------------------- | -------- |
-| View connected repositories     | Component    | `RepositoryList.renders`      | 🔴 Draft |
-| Search repositories             | Component    | `RepositoryList.filters`      | 🔴 Draft |
-| Repository health indicator     | Component    | `RepositoryCard.healthBadge`  | 🔴 Draft |
-| Empty state (no repos)          | Component    | `RepositoryList.emptyState`   | 🔴 Draft |
-| Navigate to repository detail   | E2E          | `repositories.navigation`     | 🔴 Draft |
+| View connected repositories     | Component    | `RepositoryCard.test.ts`      | ✅ Done  |
+| Search repositories             | E2E          | `repositories.spec.ts`        | ✅ Done  |
+| Repository health indicator     | Component    | `RepositoryCard.test.ts`      | ✅ Done  |
+| Empty state (no repos)          | Component    | `EmptyState.test.ts`          | ✅ Done  |
+| Navigate to repository detail   | E2E          | `repositories.spec.ts`        | ✅ Done  |
 | GitHub API error handling       | Component    | `RepositoryList.errorState`   | 🔴 Draft |
 
 ### Story 4: Event Stream Viewer
 
 | AC Scenario                     | Test Layer   | Test ID                       | Status   |
 | ------------------------------- | ------------ | ----------------------------- | -------- |
-| View recent events              | Component    | `EventList.renders`           | 🔴 Draft |
-| Event card displays all fields  | Component    | `EventCard.displaysFields`    | 🔴 Draft |
-| Filter events by type           | Component    | `EventList.filterByType`      | 🔴 Draft |
+| View recent events              | Component    | `EventCard.test.ts`           | ✅ Done  |
+| Event card displays all fields  | Component    | `EventCard.test.ts`           | ✅ Done  |
+| Filter events by type           | E2E          | `events.spec.ts`              | ✅ Done  |
 | Filter events by date range     | Component    | `EventList.filterByDate`      | 🔴 Draft |
-| View raw payload                | Component    | `EventCard.rawPayload`        | 🔴 Draft |
-| Pagination works                | E2E          | `events.pagination`           | 🔴 Draft |
-| Empty state (no events)         | Component    | `EventList.emptyState`        | 🔴 Draft |
+| View raw payload                | E2E          | `events.spec.ts`              | ✅ Done  |
+| Pagination works                | E2E          | `events.spec.ts`              | ✅ Done  |
+| Empty state (no events)         | E2E          | `events.spec.ts`              | ✅ Done  |
 | Search events                   | Component    | `EventList.search`            | 🔴 Draft |
 
 ### Story 5: Minimal Dashboard
 
 | AC Scenario                     | Test Layer   | Test ID                       | Status   |
 | ------------------------------- | ------------ | ----------------------------- | -------- |
-| Dashboard renders repos         | Component    | `Dashboard.rendersRepos`      | 🔴 Draft |
+| Dashboard renders repos         | E2E          | `dashboard.spec.ts`           | ✅ Done  |
 | Dashboard shows active issue    | Component    | `Dashboard.activeIssue`       | 🔴 Draft |
 | Dashboard shows active PR       | Component    | `Dashboard.activePR`          | 🔴 Draft |
 | Dashboard shows queue depth     | Component    | `Dashboard.queueDepth`        | 🔴 Draft |
 | Health indicators               | Component    | `Dashboard.healthIndicators`  | 🔴 Draft |
-| Navigate to repo detail         | E2E          | `dashboard.navigation`        | 🔴 Draft |
-| Empty dashboard                 | Component    | `Dashboard.emptyState`        | 🔴 Draft |
+| Navigate to repo detail         | E2E          | `dashboard.spec.ts`           | ✅ Done  |
+| Empty dashboard                 | E2E          | `dashboard.spec.ts`           | ✅ Done  |
 | Auto-refresh works              | E2E          | `dashboard.autoRefresh`       | 🔴 Draft |
 
 ### Story 0: Login UI
 
 | AC Scenario                     | Test Layer   | Test ID                       | Status   |
 | ------------------------------- | ------------ | ----------------------------- | -------- |
-| Login page renders              | Component    | `LoginPage.renders`           | 🔴 Draft |
-| Login button redirects          | E2E          | `login.oauthRedirect`         | 🔴 Draft |
-| Session expired message         | Component    | `LoginPage.sessionExpired`    | 🔴 Draft |
-| Logout success message          | Component    | `LoginPage.logoutSuccess`     | 🔴 Draft |
-| User menu shows profile         | Component    | `UserMenu.profile`            | 🔴 Draft |
+| Login page renders              | E2E          | `login.spec.ts`               | ✅ Done  |
+| Login button redirects          | E2E          | `login.spec.ts`               | ✅ Done  |
+| Session expired message         | E2E          | `login.spec.ts`               | ✅ Done  |
+| Logout success message          | E2E          | `login.spec.ts`               | ✅ Done  |
+| User menu shows profile         | E2E          | `dashboard.spec.ts`           | ✅ Done  |
 | Full login → dashboard flow     | E2E          | `login.fullFlow`              | 🔴 Draft |
 
 ______________________________________________________________________
@@ -258,9 +258,9 @@ ______________________________________________________________________
 
 | Test ID    | Requirement                              | Layer       | Status   |
 | ---------- | ---------------------------------------- | ----------- | -------- |
-| A11Y-01    | Keyboard navigation (all pages)          | E2E         | 🔴 Draft |
+| A11Y-01    | Keyboard navigation (all pages)          | E2E         | ✅ Done  |
 | A11Y-02    | Focus management on route change         | E2E         | 🔴 Draft |
-| A11Y-03    | ARIA labels on interactive elements      | Component   | 🔴 Draft |
+| A11Y-03    | ARIA labels on interactive elements      | E2E         | ✅ Done  |
 | A11Y-04    | Color contrast (WCAG AA)                 | E2E         | 🔴 Draft |
 | A11Y-05    | Screen reader announcements              | E2E         | 🔴 Draft |
 
