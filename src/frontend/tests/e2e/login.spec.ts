@@ -117,11 +117,18 @@ test.describe('Login Page Accessibility', () => {
 	 * A11Y-01: Keyboard navigation works on login page
 	 */
 	test('should be navigable with keyboard', async ({ page }) => {
-		// Tab to the login button
-		await page.keyboard.press('Tab');
+		// Tab through elements until login button is focused
+		const loginButton = page.getByRole('button', { name: /login with github/i });
+
+		// Press Tab multiple times to reach the button (may need to pass skip links, nav items)
+		for (let i = 0; i < 10; i++) {
+			await page.keyboard.press('Tab');
+			if (await loginButton.evaluate((el) => document.activeElement === el)) {
+				break;
+			}
+		}
 
 		// Assert - Login button is focused
-		const loginButton = page.getByRole('button', { name: /login with github/i });
 		await expect(loginButton).toBeFocused();
 	});
 

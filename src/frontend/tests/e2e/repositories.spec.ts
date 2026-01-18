@@ -129,8 +129,8 @@ test.describe('Repository List Page', () => {
 
 		await page.goto('/repositories');
 
-		// Assert - Private badge visible
-		await expect(page.getByText('Private')).toBeVisible();
+		// Assert - Private badge visible (use span for badge, not heading/description)
+		await expect(page.locator('span').filter({ hasText: /^Private$/ })).toBeVisible();
 	});
 
 	/**
@@ -173,8 +173,8 @@ test.describe('Repository List Page', () => {
 
 		await page.goto('/repositories');
 
-		// Assert - Empty state or "no repositories" message
-		await expect(page.getByText(/no repositories|empty/i)).toBeVisible();
+		// Assert - Empty state heading visible
+		await expect(page.getByRole('heading', { name: /no repositories/i })).toBeVisible();
 	});
 });
 
