@@ -71,9 +71,15 @@ ______________________________________________________________________
 ### Technical
 
 - **Backend:** FastAPI (Python) with SQLModel ORM
-- **Frontend:** SvelteKit with Tailwind CSS
+- **Frontend:** SvelteKit 2.x (Svelte 5) with Tailwind CSS
+- **UI Components:** shadcn-svelte (accessible, Tailwind-based)
 - **Database:** PostgreSQL (production) / SQLite (development)
-- **Package Management:** `uv` for Python virtual environment and dependencies
+- **Package Management:**
+  - Backend: `uv` for Python virtual environment and dependencies
+  - Frontend: `pnpm` for Node.js package management
+- **Frontend Testing:**
+  - Unit/Component: Vitest + @testing-library/svelte
+  - E2E: Playwright
 - **Deployment:** Docker-based (full stack: backend + frontend + DB)
 - **Serverless-compatible:** (platform TBD, must support Python)
 

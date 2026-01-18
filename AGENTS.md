@@ -35,10 +35,18 @@ Before making changes:
 
 Run these commands from repository root:
 
+**Backend (Python):**
 ```bash
 make test         # All tests must pass
 make lint         # Must show "All checks passed!"
 make format-check # Must show "files already formatted"
+```
+
+**Frontend (SvelteKit):** Run from `src/frontend/`:
+```bash
+pnpm check        # TypeScript type checking
+pnpm lint         # ESLint checks
+pnpm test         # Unit/component tests
 ```
 
 If any step fails: fix it, or explain precisely what blocks you (including error output).
@@ -48,8 +56,8 @@ If any step fails: fix it, or explain precisely what blocks you (including error
 ## Boundaries (what NOT to do)
 
 - **Do not modify** without explicit request:
-  - Dependency lockfiles (`uv.lock`) unless required by the change
-  - Generated files (`htmlcov/`, `__pycache__/`, `.mypy_cache/`)
+  - Dependency lockfiles (`uv.lock`, `pnpm-lock.yaml`) unless required by the change
+  - Generated files (`htmlcov/`, `__pycache__/`, `.mypy_cache/`, `.svelte-kit/`)
   - CI/CD configuration (`.github/workflows/`)
   - Production infrastructure or deployment configs
 
@@ -91,12 +99,12 @@ If any step fails: fix it, or explain precisely what blocks you (including error
 
 ## Project Components
 
-| Component | Path | AGENTS.md |
-|-----------|------|-----------|
-| Backend (Python/FastAPI) | `src/backend/` | [src/backend/AGENTS.md](src/backend/AGENTS.md) |
-| Frontend | `src/frontend/` | [src/frontend/AGENTS.md](src/frontend/AGENTS.md) |
-| Documentation | `docs/` | — |
-| GitHub Config | `.github/` | — |
+| Component | Path | Stack | AGENTS.md |
+|-----------|------|-------|-----------|
+| Backend | `src/backend/` | Python 3.12, FastAPI, SQLModel | [src/backend/AGENTS.md](src/backend/AGENTS.md) |
+| Frontend | `src/frontend/` | SvelteKit 2.x, Svelte 5, TypeScript | [src/frontend/AGENTS.md](src/frontend/AGENTS.md) |
+| Documentation | `docs/` | Markdown | — |
+| GitHub Config | `.github/` | YAML, Markdown | — |
 
 Navigate to component-specific `AGENTS.md` for detailed guidance.
 
@@ -105,12 +113,19 @@ Navigate to component-specific `AGENTS.md` for detailed guidance.
 ## Quick Reference
 
 ```bash
-# Setup (from repo root)
+# Backend setup (from repo root)
 make install-dev && make pre-commit-install
 
-# Validate before finishing
+# Frontend setup (from src/frontend/)
+pnpm install && npx playwright install
+
+# Backend validation
 make test && make lint && make format-check
 
-# Run dev server
-make run
+# Frontend validation
+cd src/frontend && pnpm check && pnpm lint && pnpm test
+
+# Run dev servers
+make run                    # Backend at localhost:8000
+cd src/frontend && pnpm dev # Frontend at localhost:5173
 ```

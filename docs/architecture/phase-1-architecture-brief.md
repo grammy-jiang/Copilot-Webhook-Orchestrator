@@ -70,16 +70,20 @@ ______________________________________________________________________
 
 ### 3.1 Technical Constraints
 
-| Constraint         | Value          | Rationale                                          |
-| ------------------ | -------------- | -------------------------------------------------- |
-| Backend Framework  | FastAPI        | Async support, OpenAPI generation, modern Python   |
-| ORM                | SQLModel       | Pydantic integration, type safety, SQLAlchemy core |
-| Frontend Framework | SvelteKit      | Reactive, SSR support, lightweight                 |
-| CSS Framework      | Tailwind CSS   | Utility-first, rapid development                   |
-| Database (Dev)     | SQLite         | Zero-config local development                      |
-| Database (Prod)    | PostgreSQL     | ACID, JSONB, production-grade                      |
-| Package Manager    | uv             | Fast, modern Python dependency management          |
-| Deployment         | Docker Compose | Full-stack local and production deployment         |
+| Constraint               | Value                            | Rationale                                          |
+| ------------------------ | -------------------------------- | -------------------------------------------------- |
+| Backend Framework        | FastAPI                          | Async support, OpenAPI generation, modern Python   |
+| ORM                      | SQLModel                         | Pydantic integration, type safety, SQLAlchemy core |
+| Frontend Framework       | SvelteKit 2.x (Svelte 5)         | Reactive runes, SSR support, lightweight           |
+| UI Components            | shadcn-svelte                    | Accessible, headless, Tailwind-based               |
+| CSS Framework            | Tailwind CSS                     | Utility-first, rapid development                   |
+| Database (Dev)           | SQLite                           | Zero-config local development                      |
+| Database (Prod)          | PostgreSQL                       | ACID, JSONB, production-grade                      |
+| Backend Package Manager  | uv                               | Fast, modern Python dependency management          |
+| Frontend Package Manager | pnpm                             | Fast, disk-efficient Node.js package management    |
+| Frontend Testing (Unit)  | Vitest + @testing-library/svelte | Fast, ESM-native, component testing                |
+| Frontend Testing (E2E)   | Playwright                       | Cross-browser E2E, accessibility testing           |
+| Deployment               | Docker Compose                   | Full-stack local and production deployment         |
 
 ### 3.2 Integration Constraints
 
@@ -171,14 +175,14 @@ ______________________________________________________________________
 
 ### 5.2 Component Responsibilities
 
-| Component              | Responsibility                                                  |
-| ---------------------- | --------------------------------------------------------------- |
-| **Webhook Receiver**   | Receive GitHub webhooks, verify signature, queue for processing |
-| **Auth Service**       | GitHub OAuth flow, session management, user lookup              |
-| **Events Service**     | Store events, query with filters, deduplication                 |
-| **API Routes**         | REST endpoints for frontend (repos, events, dashboard)          |
-| **SvelteKit Frontend** | Repository list, event stream viewer, dashboard                 |
-| **Database**           | Persist users, sessions, installations, repositories, events    |
+| Component                  | Responsibility                                                  |
+| -------------------------- | --------------------------------------------------------------- |
+| **Webhook Receiver**       | Receive GitHub webhooks, verify signature, queue for processing |
+| **Auth Service**           | GitHub OAuth flow, session management, user lookup              |
+| **Events Service**         | Store events, query with filters, deduplication                 |
+| **API Routes**             | REST endpoints for frontend (repos, events, dashboard)          |
+| **SvelteKit 2.x Frontend** | Repository list, event stream viewer, dashboard (shadcn-svelte) |
+| **Database**               | Persist users, sessions, installations, repositories, events    |
 
 ______________________________________________________________________
 

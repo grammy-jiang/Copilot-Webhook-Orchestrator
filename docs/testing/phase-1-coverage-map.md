@@ -24,10 +24,20 @@ ______________________________________________________________________
 
 ### Test Framework Stack
 
-- **Python Backend**: pytest + pytest-asyncio + httpx (async client)
+#### Backend (Python)
+
+- **Framework**: pytest + pytest-asyncio + httpx (async client)
 - **Mocking**: pytest-mock, respx (HTTP mocking)
 - **Database**: SQLite in-memory for tests
 - **Coverage**: pytest-cov (target: 80%+ for core modules)
+
+#### Frontend (SvelteKit 2.x)
+
+- **Unit/Component**: Vitest + @testing-library/svelte
+- **E2E**: Playwright (cross-browser)
+- **Component Library**: shadcn-svelte (accessible components)
+- **Coverage**: @vitest/coverage-v8 (target: 80%+ for components)
+- **Package Manager**: pnpm
 
 ______________________________________________________________________
 
@@ -133,6 +143,8 @@ ______________________________________________________________________
 
 ## 7. Test File Structure
 
+### Backend (Python)
+
 ```
 src/backend/
 ├── pyproject.toml           # Test dependencies
@@ -158,29 +170,145 @@ src/backend/
 │       └── events.py
 ```
 
+### Frontend (SvelteKit 2.x)
+
+```
+src/frontend/
+├── package.json             # pnpm dependencies
+├── vitest.config.ts         # Vitest configuration
+├── playwright.config.ts     # Playwright configuration
+├── src/
+│   ├── lib/
+│   │   ├── components/
+│   │   │   ├── __tests__/   # Component unit tests
+│   │   │   │   ├── EventCard.test.ts
+│   │   │   │   ├── EventList.test.ts
+│   │   │   │   ├── RepositoryCard.test.ts
+│   │   │   │   ├── Dashboard.test.ts
+│   │   │   │   └── LoginButton.test.ts
+│   │   │   └── ui/          # shadcn-svelte components
+│   │   └── stores/
+│   │       └── __tests__/   # Store unit tests
+│   │           └── auth.test.ts
+│   └── routes/
+│       └── __tests__/       # Route-level tests
+├── tests/
+│   └── e2e/                 # Playwright E2E tests
+│       ├── login.spec.ts
+│       ├── dashboard.spec.ts
+│       ├── events.spec.ts
+│       └── repositories.spec.ts
+```
+
 ______________________________________________________________________
 
-## 8. Implementation Priority
+## 8. Frontend Test Cases
 
-### Batch 1: Core Infrastructure (Story 0, 1)
+### Story 3: Repository Selection UI
+
+| AC Scenario                     | Test Layer   | Test ID                       | Status   |
+| ------------------------------- | ------------ | ----------------------------- | -------- |
+| View connected repositories     | Component    | `RepositoryList.renders`      | 🔴 Draft |
+| Search repositories             | Component    | `RepositoryList.filters`      | 🔴 Draft |
+| Repository health indicator     | Component    | `RepositoryCard.healthBadge`  | 🔴 Draft |
+| Empty state (no repos)          | Component    | `RepositoryList.emptyState`   | 🔴 Draft |
+| Navigate to repository detail   | E2E          | `repositories.navigation`     | 🔴 Draft |
+| GitHub API error handling       | Component    | `RepositoryList.errorState`   | 🔴 Draft |
+
+### Story 4: Event Stream Viewer
+
+| AC Scenario                     | Test Layer   | Test ID                       | Status   |
+| ------------------------------- | ------------ | ----------------------------- | -------- |
+| View recent events              | Component    | `EventList.renders`           | 🔴 Draft |
+| Event card displays all fields  | Component    | `EventCard.displaysFields`    | 🔴 Draft |
+| Filter events by type           | Component    | `EventList.filterByType`      | 🔴 Draft |
+| Filter events by date range     | Component    | `EventList.filterByDate`      | 🔴 Draft |
+| View raw payload                | Component    | `EventCard.rawPayload`        | 🔴 Draft |
+| Pagination works                | E2E          | `events.pagination`           | 🔴 Draft |
+| Empty state (no events)         | Component    | `EventList.emptyState`        | 🔴 Draft |
+| Search events                   | Component    | `EventList.search`            | 🔴 Draft |
+
+### Story 5: Minimal Dashboard
+
+| AC Scenario                     | Test Layer   | Test ID                       | Status   |
+| ------------------------------- | ------------ | ----------------------------- | -------- |
+| Dashboard renders repos         | Component    | `Dashboard.rendersRepos`      | 🔴 Draft |
+| Dashboard shows active issue    | Component    | `Dashboard.activeIssue`       | 🔴 Draft |
+| Dashboard shows active PR       | Component    | `Dashboard.activePR`          | 🔴 Draft |
+| Dashboard shows queue depth     | Component    | `Dashboard.queueDepth`        | 🔴 Draft |
+| Health indicators               | Component    | `Dashboard.healthIndicators`  | 🔴 Draft |
+| Navigate to repo detail         | E2E          | `dashboard.navigation`        | 🔴 Draft |
+| Empty dashboard                 | Component    | `Dashboard.emptyState`        | 🔴 Draft |
+| Auto-refresh works              | E2E          | `dashboard.autoRefresh`       | 🔴 Draft |
+
+### Story 0: Login UI
+
+| AC Scenario                     | Test Layer   | Test ID                       | Status   |
+| ------------------------------- | ------------ | ----------------------------- | -------- |
+| Login page renders              | Component    | `LoginPage.renders`           | 🔴 Draft |
+| Login button redirects          | E2E          | `login.oauthRedirect`         | 🔴 Draft |
+| Session expired message         | Component    | `LoginPage.sessionExpired`    | 🔴 Draft |
+| Logout success message          | Component    | `LoginPage.logoutSuccess`     | 🔴 Draft |
+| User menu shows profile         | Component    | `UserMenu.profile`            | 🔴 Draft |
+| Full login → dashboard flow     | E2E          | `login.fullFlow`              | 🔴 Draft |
+
+______________________________________________________________________
+
+## 9. Frontend Accessibility Tests
+
+| Test ID    | Requirement                              | Layer       | Status   |
+| ---------- | ---------------------------------------- | ----------- | -------- |
+| A11Y-01    | Keyboard navigation (all pages)          | E2E         | 🔴 Draft |
+| A11Y-02    | Focus management on route change         | E2E         | 🔴 Draft |
+| A11Y-03    | ARIA labels on interactive elements      | Component   | 🔴 Draft |
+| A11Y-04    | Color contrast (WCAG AA)                 | E2E         | 🔴 Draft |
+| A11Y-05    | Screen reader announcements              | E2E         | 🔴 Draft |
+
+______________________________________________________________________
+
+## 10. Implementation Priority
+
+### Backend Batch 1: Core Infrastructure (Story 0, 1)
 
 1. Auth tests (OAuth flow, sessions)
 1. Webhook verification tests (HMAC)
 1. Health check tests
 
-### Batch 2: Data Layer (Story 0b, 2)
+### Backend Batch 2: Data Layer (Story 0b, 2)
 
 4. Installation tests
 1. Event storage tests
 
-### Batch 3: Security & NFR
+### Backend Batch 3: Security & NFR
 
 6. Security tests (AUTH-*, AUTHZ-*)
 1. Input validation tests
 
+### Frontend Batch 1: Foundation (Story 0)
+
+8. Login page component tests
+1. User menu component tests
+1. Auth store tests
+
+### Frontend Batch 2: Core UI (Stories 3, 4)
+
+11. Repository list/card component tests
+1. Event list/card component tests
+1. Navigation E2E tests
+
+### Frontend Batch 3: Dashboard (Story 5)
+
+14. Dashboard component tests
+1. Auto-refresh E2E tests
+
+### Frontend Batch 4: Accessibility
+
+16. Keyboard navigation E2E tests
+1. ARIA compliance tests
+
 ______________________________________________________________________
 
-## 9. Next Steps
+## 11. Next Steps
 
 After tests are drafted:
 

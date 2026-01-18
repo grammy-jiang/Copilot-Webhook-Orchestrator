@@ -8,31 +8,195 @@
 
 ## Status
 
-⚠️ **Frontend not yet implemented.** This folder is a placeholder for future development.
+🔄 **Frontend scaffolding in progress.** Stack finalized, implementation starting.
 
 ---
 
-## Planned Stack
+## Finalized Stack
 
-| Attribute | Value |
-|-----------|-------|
-| **Framework** | TBD (likely React or Next.js) |
-| **Language** | TypeScript |
-| **Package Manager** | TBD (likely pnpm or npm) |
-| **Testing** | TBD (likely Vitest or Jest) |
+| Attribute            | Value                            |
+| -------------------- | -------------------------------- |
+| **Framework**        | SvelteKit 2.x (Svelte 5)         |
+| **Language**         | TypeScript 5.x                   |
+| **Package Manager**  | pnpm                             |
+| **CSS Framework**    | Tailwind CSS 3.x                 |
+| **UI Components**    | shadcn-svelte                    |
+| **Unit Testing**     | Vitest + @testing-library/svelte |
+| **E2E Testing**      | Playwright                       |
+| **Code Quality**     | ESLint + Prettier                |
 
 ---
 
-## When Implementing Frontend
+## Build & Validation Commands
 
-Update this file with:
+**All commands run from `src/frontend/` directory.**
 
-1. **Environment setup** (Node version, package manager commands)
-2. **Development commands** (dev server, build, test, lint)
-3. **Directory structure** (components, pages, hooks, utils)
-4. **Code patterns** (component creation, state management, API calls)
-5. **Testing requirements** (unit tests, integration tests, E2E)
-6. **Style guide** (ESLint/Prettier config, naming conventions)
+### Required Setup (run once)
+
+```bash
+pnpm install              # Install all dependencies
+npx playwright install    # Install browser binaries for E2E tests
+```
+
+### Development Workflow
+
+| Task                    | Command                 |
+| ----------------------- | ----------------------- |
+| **Start dev server**    | `pnpm dev`              |
+| **Run unit tests**      | `pnpm test`             |
+| **Run tests with UI**   | `pnpm test:ui`          |
+| **Run E2E tests**       | `pnpm test:e2e`         |
+| **Run all tests**       | `pnpm test:all`         |
+| **Type check**          | `pnpm check`            |
+| **Lint code**           | `pnpm lint`             |
+| **Format code**         | `pnpm format`           |
+| **Build for production**| `pnpm build`            |
+| **Preview production**  | `pnpm preview`          |
+
+### Validation Before Committing
+
+**ALWAYS run these before declaring work complete:**
+
+```bash
+pnpm check       # TypeScript type checking
+pnpm lint        # ESLint checks
+pnpm test        # Unit/component tests
+pnpm test:e2e    # E2E tests (if UI changes)
+```
+
+---
+
+## Directory Structure
+
+```
+src/frontend/
+├── package.json
+├── pnpm-lock.yaml
+├── svelte.config.js
+├── tailwind.config.js
+├── vite.config.ts
+├── vitest.config.ts
+├── playwright.config.ts
+├── src/
+│   ├── app.html
+│   ├── app.css                  # Global styles, Tailwind imports
+│   ├── lib/
+│   │   ├── components/
+│   │   │   ├── ui/              # shadcn-svelte components
+│   │   │   └── __tests__/       # Component unit tests
+│   │   ├── stores/              # Svelte stores (auth, etc.)
+│   │   │   └── __tests__/
+│   │   └── utils/               # Utility functions
+│   │       └── __tests__/
+│   └── routes/
+│       ├── +layout.svelte       # Root layout
+│       ├── +page.svelte         # Dashboard (home)
+│       ├── login/
+│       │   └── +page.svelte
+│       ├── repositories/
+│       │   ├── +page.svelte     # Repository list
+│       │   └── [id]/
+│       │       └── +page.svelte # Repository detail
+│       └── events/
+│           ├── +page.svelte     # Event list
+│           └── [id]/
+│               └── +page.svelte # Event detail
+├── static/                      # Static assets
+└── tests/
+    └── e2e/                     # Playwright E2E tests
+        ├── login.spec.ts
+        ├── dashboard.spec.ts
+        ├── events.spec.ts
+        └── repositories.spec.ts
+```
+
+---
+
+## Code Patterns
+
+### Component Creation
+
+```typescript
+<!-- src/lib/components/EventCard.svelte -->
+<script lang="ts">
+  import { Badge } from '$lib/components/ui/badge';
+  import type { Event } from '$lib/types';
+
+  interface Props {
+    event: Event;
+    showRawPayload?: boolean;
+  }
+
+  let { event, showRawPayload = false }: Props = $props();
+
+  // Derived state using Svelte 5 runes
+  let formattedDate = $derived(
+    new Date(event.created_at).toLocaleString()
+  );
+</script>
+
+<div data-testid="event-card" class="p-4 border rounded-lg">
+  <Badge>{event.event_type}</Badge>
+  <span>{formattedDate}</span>
+</div>
+```
+
+### Store Pattern (Svelte 5)
+
+```typescript
+// src/lib/stores/auth.svelte.ts
+import type { User } from '$lib/types';
+
+class AuthStore {
+  user = $state<User | null>(null);
+  isLoading = $state(true);
+
+  get isAuthenticated() {
+    return this.user !== null;
+  }
+
+  async fetchUser() {
+    this.isLoading = true;
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        this.user = await res.json();
+      }
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  logout() {
+    this.user = null;
+  }
+}
+
+export const auth = new AuthStore();
+```
+
+### Component Testing
+
+```typescript
+// src/lib/components/__tests__/EventCard.test.ts
+import { render, screen } from '@testing-library/svelte';
+import { describe, it, expect } from 'vitest';
+import EventCard from '../EventCard.svelte';
+
+describe('EventCard', () => {
+  it('renders event type badge', () => {
+    const event = {
+      id: '1',
+      event_type: 'pull_request',
+      created_at: '2026-01-18T10:00:00Z',
+    };
+
+    render(EventCard, { props: { event } });
+
+    expect(screen.getByText('pull_request')).toBeInTheDocument();
+  });
+});
+```
 
 ---
 
@@ -40,28 +204,73 @@ Update this file with:
 
 The backend API runs at `http://localhost:8000` by default.
 
-Key endpoints to integrate:
+### API Proxy (Development)
 
-- `GET /health` — Health check
-- `POST /webhooks/github` — GitHub webhook receiver
-- `GET /api/events` — List webhook events
-- `GET /api/installations` — List GitHub App installations
-- `POST /auth/login` — OAuth login flow
-- `POST /auth/logout` — Session logout
+Configure in `vite.config.ts`:
+
+```typescript
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8000',
+    },
+  },
+});
+```
+
+### Key Endpoints
+
+| Endpoint                  | Description                  |
+| ------------------------- | ---------------------------- |
+| `GET /api/health`         | Health check                 |
+| `GET /api/auth/login`     | Initiate OAuth flow          |
+| `GET /api/auth/callback`  | OAuth callback               |
+| `GET /api/auth/me`        | Current user                 |
+| `POST /api/auth/logout`   | Logout                       |
+| `GET /api/installations`  | List installations           |
+| `GET /api/events`         | List events (paginated)      |
 
 See backend API schemas in `../backend/app/api/schemas.py`.
 
 ---
 
-## Validation Checklist
+## Testing Requirements
 
-When frontend is implemented, add appropriate commands:
+### Unit/Component Tests (Vitest)
 
-```bash
-# Placeholder — update when frontend is set up
-npm install       # Install dependencies
-npm run dev       # Start dev server
-npm run build     # Build for production
-npm run test      # Run tests
-npm run lint      # Lint code
-```
+- **Target coverage**: 80%+ for components
+- **Location**: `src/lib/components/__tests__/`
+- **Naming**: `ComponentName.test.ts`
+- **Run**: `pnpm test`
+
+### E2E Tests (Playwright)
+
+- **Location**: `tests/e2e/`
+- **Naming**: `feature.spec.ts`
+- **Run**: `pnpm test:e2e`
+- **Critical paths**:
+  - Login → Dashboard flow
+  - Dashboard → Repository detail
+  - Event stream navigation
+
+---
+
+## Accessibility Requirements
+
+All components must:
+
+- [x] Support keyboard navigation
+- [x] Have proper ARIA labels
+- [x] Meet WCAG AA color contrast
+- [x] Announce route changes to screen readers
+
+shadcn-svelte components provide accessibility by default.
+
+---
+
+## References
+
+- [SvelteKit Docs](https://kit.svelte.dev/docs)
+- [Svelte 5 Runes](https://svelte.dev/docs/svelte/what-are-runes)
+- [shadcn-svelte](https://shadcn-svelte.com/)
+- [ADR-005: Frontend Stack](../../docs/architecture/adr/ADR-005-frontend-stack.md)

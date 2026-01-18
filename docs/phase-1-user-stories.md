@@ -535,11 +535,13 @@ Scenario: Empty state (no repositories connected)
 
 **Definition of Ready:**
 
-- [x] SvelteKit project is initialized with Tailwind CSS
+- [x] SvelteKit 2.x project is initialized with Tailwind CSS and shadcn-svelte
+- [x] Frontend package management configured (pnpm)
 - [x] GitHub API endpoint for listing installation repositories is documented
 - [x] UI wireframes/mockups are approved
 - [x] Database schema for Repository entity is designed (SQLModel)
 - [x] Authentication middleware is working (Story 0)
+- [x] Component testing setup ready (Vitest + @testing-library/svelte)
 
 **Data Model:**
 
@@ -657,13 +659,15 @@ Scenario: Handle no events
 - [x] UI wireframes are approved
 - [x] Pagination strategy is chosen (limit/offset vs. cursor-based)
 - [x] Real-time update mechanism is decided (polling, WebSocket, or SSE)
+- [x] Vitest component tests defined for EventList, EventCard components
+- [x] Playwright E2E tests defined for event stream navigation
 
 **Out of Scope:**
 
 - Event processing/interpretation (separate stories)
 - Alerting on specific events (Phase 5+)
 
-**Estimated Effort:** 4-6 days (SvelteKit UI + pagination + search + performance
+**Estimated Effort:** 4-6 days (SvelteKit 2.x UI + shadcn-svelte components + pagination + search + performance
 optimization)
 
 **Dependencies:** Stories 0b-2 (auth, installation, event storage must be
@@ -773,13 +777,16 @@ Scenario: Dashboard performance
 - [x] Dashboard layout/wireframes are approved
 - [x] Performance requirements are clear (\<3 seconds load time)
 - [x] Real-time update mechanism is decided (polling vs. SSE)
+- [x] shadcn-svelte components selected for dashboard cards
+- [x] Vitest tests defined for dashboard components
+- [x] Playwright E2E tests defined for dashboard navigation flow
 
 **Out of Scope:**
 
 - Per-issue/PR detail pages (can be future enhancement)
 - Analytics/trends (Phase 8)
 
-**Estimated Effort:** 4-6 days (SvelteKit dashboard UI + data aggregation +
+**Estimated Effort:** 4-6 days (SvelteKit 2.x dashboard UI + shadcn-svelte + data aggregation +
 auto-refresh)
 
 **Dependencies:** Stories 0b-4 (auth, installation, event storage, event viewer,
